@@ -24,6 +24,7 @@ import {
   LogOut,
   Warehouse,
   User as UserIcon,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 import optirackLogo from "@/assets/optirack-logo.png";
@@ -222,6 +223,14 @@ export default function Dashboard() {
             </div>
 
             <div className="flex items-center gap-4">
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/historico')}
+                className="hidden md:flex"
+              >
+                <History className="mr-2 h-4 w-4" />
+                Histórico
+              </Button>
               <div className="flex items-center gap-3 glass-card px-4 py-2 rounded-2xl">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-200">
                   <UserIcon className="h-4 w-4 text-neutral-900" />
@@ -317,6 +326,10 @@ export default function Dashboard() {
                 <Button size="lg" className="group" onClick={() => setShowUploadDialog(true)}>
                   <Upload className="mr-2 h-5 w-5" />
                   Upload de Dados
+                </Button>
+                <Button size="lg" variant="outline" onClick={() => navigate('/historico')}>
+                  <History className="mr-2 h-5 w-5" />
+                  Ver Histórico
                 </Button>
                 <Button size="lg" variant="outline">
                   <BarChart3 className="mr-2 h-5 w-5" />

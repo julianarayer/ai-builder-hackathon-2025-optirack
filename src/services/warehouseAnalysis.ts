@@ -206,3 +206,78 @@ export async function getTopSKUs(warehouseId: string, limit: number = 10) {
 
   return data || [];
 }
+
+/**
+ * Fetch analyses by month for a warehouse
+ */
+export async function getAnalysesByMonth(
+  warehouseId: string,
+  year: number,
+  month: number
+) {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0, 23, 59, 59);
+
+  const { data, error } = await supabase
+    .from('optimization_runs')
+    .select('*')
+    .eq('warehouse_id', warehouseId)
+    .gte('run_date', startDate.toISOString())
+    .lte('run_date', endDate.toISOString())
+    .order('run_date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching analyses by month:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetch specific analysis by ID with recommendations
+ */
+export async function getAnalysisById(analysisId: string) {
+  const { data, error } = await supabase
+    .from('optimization_runs')
+    .select(`
+      *,
+      slotting_recommendations (*)
+    `)
+    .eq('id', analysisId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching analysis:', error);
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * Get calendar data for a month (dates with analyses)
+ */
+export async function getCalendarData(
+  warehouseId: string,
+  year: number,
+  month: number
+) {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0, 23, 59, 59);
+
+  const { data, error } = await supabase
+    .from('optimization_runs')
+    .select('id, run_date, total_skus_analyzed, recommendations_generated')
+    .eq('warehouse_id', warehouseId)
+    .gte('run_date', startDate.toISOString())
+    .lte('run_date', endDate.toISOString())
+    .order('run_date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching calendar data:', error);
+    return [];
+  }
+
+  return data || [];
+}
