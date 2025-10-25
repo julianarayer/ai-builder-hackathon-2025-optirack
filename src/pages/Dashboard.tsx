@@ -233,7 +233,7 @@ export default function Dashboard() {
         <AppSidebar />
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-neutral-200/50">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-6 py-2">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
@@ -276,7 +276,7 @@ export default function Dashboard() {
       {/* Main Content Wrapper */}
       <div className="flex-1 overflow-auto">
       {/* Spacer for fixed header */}
-      <div className="h-[72px]" />
+      <div className="h-[56px]" />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 space-y-8">
