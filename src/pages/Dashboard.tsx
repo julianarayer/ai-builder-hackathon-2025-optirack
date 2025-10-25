@@ -57,6 +57,8 @@ export default function Dashboard() {
   const [showMappingModal, setShowMappingModal] = useState(false);
   const [pendingMappingData, setPendingMappingData] = useState<any>(null);
   const [showABCExplanation, setShowABCExplanation] = useState(false);
+  const [affinityPairs, setAffinityPairs] = useState<any[]>([]);
+  const [showAffinityExplanation, setShowAffinityExplanation] = useState(false);
 
   useEffect(() => {
     // Check auth state
@@ -211,6 +213,21 @@ export default function Dashboard() {
     // Load top SKUs
     const skus = await getTopSKUs(warehouse.id, 10);
     setTopSKUs(skus);
+
+    // Load affinity pairs from analytics snapshot
+    if (run?.id) {
+      const { data: snapshot } = await supabase
+        .from('analytics_snapshots')
+        .select('top_affinity_pairs')
+        .eq('optimization_run_id', run.id)
+        .order('generated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (snapshot?.top_affinity_pairs && Array.isArray(snapshot.top_affinity_pairs)) {
+        setAffinityPairs(snapshot.top_affinity_pairs as any[]);
+      }
+    }
   };
 
   useEffect(() => {
@@ -489,24 +506,73 @@ export default function Dashboard() {
             </GlassCard>
 
             <GlassCard className="space-y-4">
-              <h3 className="text-lg font-medium text-neutral-900">
-                Top 10 SKUs mais frequentes
-              </h3>
-              <div className="flex items-center justify-center h-64">
-                {topSKUs.length > 0 ? (
-                  <div className="space-y-2 w-full">
-                    {topSKUs.slice(0, 10).map((sku, index) => (
-                      <div key={sku.id} className="flex items-center justify-between text-sm">
-                        <span className="font-medium">{index + 1}. {sku.sku_code}</span>
-                        <span className="text-neutral-600">{sku.pick_frequency} picks</span>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-neutral-900">
+                  Pares de Afinidade (Co-ocorrência)
+                </h3>
+                <button
+                  onClick={() => setShowAffinityExplanation(true)}
+                  className="text-xs font-light text-pink-500 hover:text-pink-600 transition-colors flex items-center gap-1"
+                >
+                  Como funciona?
+                  <InfoIcon className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="flex items-center justify-center h-64 overflow-y-auto">
+                {affinityPairs.length > 0 ? (
+                  <div className="space-y-2 w-full pr-2">
+                    {affinityPairs.slice(0, 10).map((pair, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50/30 to-transparent rounded-lg hover:from-primary-100/40 transition-colors border border-primary-100/30"
+                      >
+                        {/* Lado esquerdo: SKUs e posição */}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <span className="text-xs font-bold text-primary-300 w-6 flex-shrink-0">
+                            #{index + 1}
+                          </span>
+                          <div className="flex flex-col min-w-0">
+                            <div className="font-medium text-sm text-neutral-900 truncate">
+                              {pair.sku_i} + {pair.sku_j}
+                            </div>
+                            <div className="text-xs text-neutral-500">
+                              {(pair.support_ij * 100).toFixed(1)}% dos pedidos
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Lado direito: Métricas */}
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <div className="text-center">
+                            <div className="text-xs text-neutral-500">Lift</div>
+                            <div className="text-sm font-bold text-blue-600">
+                              {pair.lift.toFixed(2)}×
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-neutral-500">φ</div>
+                            <div className="text-sm font-bold text-pink-600">
+                              {pair.phi.toFixed(2)}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-neutral-500">Conf.</div>
+                            <div className="text-sm font-medium text-neutral-700">
+                              {(pair.confidence_i_to_j * 100).toFixed(0)}%
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="text-center space-y-2">
-                    <Package className="h-16 w-16 text-primary-300 mx-auto" strokeWidth={1.5} />
+                    <Lightbulb className="h-16 w-16 text-primary-300 mx-auto" strokeWidth={1.5} />
                     <p className="text-sm text-neutral-600">
-                      Dados aparecerão aqui após o upload
+                      Pares de afinidade aparecerão aqui após a análise
+                    </p>
+                    <p className="text-xs text-neutral-500">
+                      Mostra SKUs que aparecem juntos com frequência acima do esperado
                     </p>
                   </div>
                 )}
@@ -607,6 +673,76 @@ export default function Dashboard() {
         isOpen={showABCExplanation} 
         onClose={() => setShowABCExplanation(false)} 
       />
+
+      {/* Affinity Explanation Dialog */}
+      <Dialog open={showAffinityExplanation} onOpenChange={setShowAffinityExplanation}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Como funciona a Análise de Afinidade?</DialogTitle>
+            <DialogDescription>
+              Descobrimos pares de SKUs que aparecem juntos com frequência acima do esperado
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <div>
+              <h4 className="font-semibold mb-2">📊 Métricas Calculadas:</h4>
+              <ul className="space-y-2 text-neutral-600">
+                <li>
+                  <strong>Support(i,j):</strong> Percentual de pedidos que contêm ambos os SKUs
+                  <br/>
+                  <code className="text-xs bg-neutral-100 px-1 py-0.5 rounded">
+                    = pedidos_com_i_e_j / total_pedidos
+                  </code>
+                </li>
+                <li>
+                  <strong>Lift:</strong> Força da associação (quanto maior, mais forte a relação)
+                  <br/>
+                  <code className="text-xs bg-neutral-100 px-1 py-0.5 rounded">
+                    = support(i,j) / (support(i) × support(j))
+                  </code>
+                  <br/>
+                  <span className="text-xs">• Lift &gt; 1 = associação positiva</span>
+                </li>
+                <li>
+                  <strong>Phi (φ):</strong> Coeficiente de correlação de Matthews [-1, 1]
+                  <br/>
+                  <code className="text-xs bg-neutral-100 px-1 py-0.5 rounded">
+                    = (TP×TN - FP×FN) / √((TP+FP)(TP+FN)(TN+FP)(TN+FN))
+                  </code>
+                  <br/>
+                  <span className="text-xs">• φ &gt; 0 = correlação positiva</span>
+                </li>
+                <li>
+                  <strong>Confidence:</strong> Probabilidade de j estar no pedido dado que i está
+                  <br/>
+                  <code className="text-xs bg-neutral-100 px-1 py-0.5 rounded">
+                    = support(i,j) / support(i)
+                  </code>
+                </li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-2">🎯 Critérios de Filtragem:</h4>
+              <ul className="space-y-1 text-neutral-600">
+                <li>✓ Support(i,j) ≥ 2% (aparecem juntos em pelo menos 2% dos pedidos)</li>
+                <li>✓ Support(i) ≥ 1% e Support(j) ≥ 1% (SKUs individuais relevantes)</li>
+                <li>✓ Ordenação: Lift (desc) → |Phi| (desc)</li>
+              </ul>
+            </div>
+            
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <h4 className="font-semibold mb-2 text-blue-900">💡 Como Usar:</h4>
+              <p className="text-blue-800 text-xs">
+                Produtos com alta afinidade devem ser posicionados próximos no armazém para reduzir 
+                a distância de picking. Por exemplo, se "Camiseta Branca M" e "Calça Jeans 42" 
+                aparecem juntos em 15% dos pedidos com Lift de 2.5×, posicioná-los próximos 
+                pode economizar tempo significativo.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </SidebarProvider>
   );
