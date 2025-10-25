@@ -22,7 +22,7 @@ import {
   createReplenishmentTask
 } from "@/services/inventoryService";
 import { seedDemoData } from "@/services/demoDataService";
-import { Upload, AlertCircle, Database } from "lucide-react";
+import { Upload, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Inventory() {
@@ -42,7 +42,6 @@ export default function Inventory() {
   const [slotHealth, setSlotHealth] = useState([]);
   const [agingItems, setAgingItems] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -70,6 +69,22 @@ export default function Inventory() {
       }
 
       setWarehouseId(warehouse.id);
+
+      // Check if we need to seed demo data
+      const { data: inventoryCheck } = await supabase
+        .from('inventory_snapshots')
+        .select('id', { count: 'exact', head: true })
+        .eq('warehouse_id', warehouse.id);
+
+      // Auto-seed if no inventory data exists
+      if (!inventoryCheck || inventoryCheck.length === 0) {
+        try {
+          toast.info('Criando dados de inventário automáticos...');
+          await seedDemoData();
+        } catch (error) {
+          console.error('Error auto-seeding:', error);
+        }
+      }
 
       const [pickface, replenishment, slots, aging, tasksList] = await Promise.all([
         getPickfaceHealth(warehouse.id),
@@ -120,20 +135,6 @@ export default function Inventory() {
     }
   };
 
-  const handleSeedDemoData = async () => {
-    try {
-      setSeeding(true);
-      await seedDemoData();
-      toast.success('Dados de demonstração criados com sucesso!');
-      setTimeout(() => loadData(), 1000);
-    } catch (error) {
-      console.error('Error seeding demo data:', error);
-      toast.error('Erro ao criar dados de demonstração');
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   if (loading) {
     return (
       <SidebarProvider>
@@ -161,10 +162,6 @@ export default function Inventory() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleSeedDemoData} disabled={seeding}>
-                <Database className="h-4 w-4 mr-2" />
-                {seeding ? 'Criando...' : 'Criar dados demo'}
-              </Button>
               <Button variant="outline">
                 <Upload className="h-4 w-4 mr-2" />
                 Importar CSV
