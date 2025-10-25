@@ -88,7 +88,7 @@ export default function Landing() {
             </div>
             
             <h1 className="text-5xl font-bold leading-tight lg:text-6xl" style={{ textShadow: '0 2px 4px rgba(255,255,255,0.8)' }}>
-              <span className="bg-gradient-to-r from-primary-300 to-primary-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary-300 to-primary-400 bg-clip-text text-transparent" style={{ textShadow: 'none' }}>
                 Otimize seu armazém
               </span>
               <br />
