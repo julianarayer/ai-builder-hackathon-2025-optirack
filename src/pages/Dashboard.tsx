@@ -271,11 +271,13 @@ export default function Dashboard() {
 
         {/* KPI Metrics */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            icon={Package}
-            title="Total SKUs"
-            value={latestRun?.total_skus_analyzed?.toString() || "--"}
-          />
+          <div onClick={() => latestRun && navigate('/skus')} className={latestRun ? 'cursor-pointer' : ''}>
+            <MetricCard
+              icon={Package}
+              title="Total SKUs"
+              value={latestRun?.total_skus_analyzed?.toString() || "--"}
+            />
+          </div>
           <MetricCard
             icon={Clock}
             title="Tempo Economizado"
