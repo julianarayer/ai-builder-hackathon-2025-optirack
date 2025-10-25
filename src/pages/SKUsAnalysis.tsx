@@ -9,6 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { ArrowLeft, Package, Grid3x3, Layers } from "lucide-react";
 import { toast } from "sonner";
 
@@ -255,50 +262,79 @@ export default function SKUsAnalysis() {
         </div>
 
         {/* Category Details Modal */}
-        {selectedCategory && categoryDetails.length > 0 && (
-          <GlassCard className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-neutral-900">{selectedCategory}</h2>
-                <p className="text-neutral-600">{categoryDetails.length} SKUs nesta categoria</p>
-              </div>
-              <Button variant="ghost" onClick={() => setSelectedCategory(null)}>
-                Fechar
-              </Button>
-            </div>
+        <Dialog open={selectedCategory !== null} onOpenChange={(open) => !open && setSelectedCategory(null)}>
+          <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <Layers className="h-6 w-6 text-primary-500" />
+                {selectedCategory}
+              </DialogTitle>
+              <DialogDescription>
+                {categoryDetails.length} SKUs nesta categoria
+              </DialogDescription>
+            </DialogHeader>
 
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead>
-                  <tr className="border-b border-neutral-200">
+                <thead className="bg-neutral-50 sticky top-0 z-10">
+                  <tr className="border-b-2 border-neutral-200">
                     <th className="text-left py-3 px-4 text-sm font-semibold text-neutral-700">Código</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-neutral-700">Nome</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-neutral-700">Velocidade</th>
+                    <th className="text-center py-3 px-4 text-sm font-semibold text-neutral-700">Velocidade</th>
                     <th className="text-right py-3 px-4 text-sm font-semibold text-neutral-700">Frequência</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-neutral-700">Localização</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {categoryDetails.map((sku) => (
-                    <tr key={sku.id} className="border-b border-neutral-100 hover:bg-neutral-50">
-                      <td className="py-3 px-4 text-sm font-medium text-neutral-900">{sku.sku_code}</td>
-                      <td className="py-3 px-4 text-sm text-neutral-600">{sku.sku_name || '--'}</td>
-                      <td className="py-3 px-4">
+                  {categoryDetails.map((sku, index) => (
+                    <tr 
+                      key={sku.id} 
+                      className={`border-b border-neutral-100 hover:bg-primary-50 transition-colors ${
+                        index % 2 === 0 ? 'bg-white' : 'bg-neutral-50'
+                      }`}
+                    >
+                      <td className="py-4 px-4 text-sm font-medium text-neutral-900">{sku.sku_code}</td>
+                      <td className="py-4 px-4 text-sm text-neutral-700">{sku.sku_name || '--'}</td>
+                      <td className="py-4 px-4 text-center">
                         <Badge className={getVelocityColor(sku.velocity_class)}>
                           {sku.velocity_class || '--'}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-sm text-right text-neutral-900 font-medium">
+                      <td className="py-4 px-4 text-sm text-right text-neutral-900 font-semibold">
                         {sku.pick_frequency}
                       </td>
-                      <td className="py-3 px-4 text-sm text-neutral-600">{sku.current_location || '--'}</td>
+                      <td className="py-4 px-4 text-sm text-neutral-600">{sku.current_location || '--'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </GlassCard>
-        )}
+
+            {/* Summary Footer */}
+            {categoryDetails.length > 0 && (
+              <div className="mt-4 p-4 bg-primary-50 rounded-lg border border-primary-100">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-xs font-medium text-neutral-600 mb-1">Total SKUs</p>
+                    <p className="text-2xl font-bold text-primary-600">{categoryDetails.length}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-neutral-600 mb-1">Picks Totais</p>
+                    <p className="text-2xl font-bold text-primary-600">
+                      {categoryDetails.reduce((sum, sku) => sum + sku.pick_frequency, 0)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-neutral-600 mb-1">Picks Médios</p>
+                    <p className="text-2xl font-bold text-primary-600">
+                      {Math.round(categoryDetails.reduce((sum, sku) => sum + sku.pick_frequency, 0) / categoryDetails.length)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Empty State */}
         {!isLoading && categories.length === 0 && (
