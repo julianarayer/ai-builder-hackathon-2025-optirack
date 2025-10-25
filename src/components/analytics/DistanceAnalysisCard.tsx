@@ -24,10 +24,17 @@ export function DistanceAnalysisCard({ snapshot }: Props) {
   };
   
   const mode = getModeLabel();
+
+  const handleCardClick = () => {
+    console.log('Card clicked! Opening dialog...');
+    setShowDetailsDialog(true);
+  };
+  
+  console.log('DistanceAnalysisCard render - showDetailsDialog:', showDetailsDialog);
   
   return (
     <>
-      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowDetailsDialog(true)}>
+      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={handleCardClick}>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -59,7 +66,16 @@ export function DistanceAnalysisCard({ snapshot }: Props) {
               <div className="text-3xl font-bold text-primary-600 mt-1">
                 {snapshot.avg_distance_per_order_m.toFixed(1)} m
               </div>
-              <div className="text-xs text-neutral-500 mt-1">Clique para ver detalhes do cálculo</div>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('Button clicked!');
+                  setShowDetailsDialog(true);
+                }}
+                className="text-xs text-primary-500 hover:text-primary-600 underline mt-1"
+              >
+                Clique aqui para ver como calculamos
+              </button>
             </div>
             <div className="text-right text-xs text-neutral-500">
               <div>Métrica: {methodNotes.distance_metric}</div>
