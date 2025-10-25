@@ -1,1 +1,4 @@
 project_id = "nypdvlznczkntvfyywlo"
+
+[functions.analyze-warehouse]
+verify_jwt = true

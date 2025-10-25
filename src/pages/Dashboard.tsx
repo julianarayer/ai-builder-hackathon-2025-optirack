@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FileUploader } from "@/components/upload/FileUploader";
 import { DataPreview } from "@/components/upload/DataPreview";
+import { Progress } from "@/components/ui/progress";
 import {
   Package,
   Clock,
@@ -25,6 +26,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
+import { 
+  processWarehouseData, 
+  getLatestOptimizationRun, 
+  getABCDistribution, 
+  getTopSKUs, 
+  type AnalysisProgress 
+} from "@/services/warehouseAnalysis";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -34,6 +42,10 @@ export default function Dashboard() {
   const [uploadedData, setUploadedData] = useState<any[] | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState<AnalysisProgress>({ stage: '', percent: 0 });
+  const [latestRun, setLatestRun] = useState<any>(null);
+  const [abcDistribution, setAbcDistribution] = useState<any[]>([]);
+  const [topSKUs, setTopSKUs] = useState<any[]>([]);
 
   useEffect(() => {
     // Check auth state
@@ -81,23 +93,76 @@ export default function Dashboard() {
   };
 
   const handleProcessData = async () => {
-    if (!uploadedData || !user) return;
+    if (!uploadedData || uploadedData.length === 0) {
+      toast.error("Nenhum dado para processar");
+      return;
+    }
 
     setIsProcessing(true);
+    setAnalysisProgress({ stage: 'Iniciando análise...', percent: 0 });
+
     try {
-      // TODO: Implement data processing logic with Supabase
-      // This will be implemented in the next phase with Edge Functions
-      toast.success(`${uploadedData.length} linhas processadas com sucesso!`);
-      setShowUploadDialog(false);
-      setUploadedData(null);
-      setFileName("");
-    } catch (error) {
-      toast.error('Erro ao processar dados');
-      console.error(error);
-    } finally {
+      const result = await processWarehouseData(
+        uploadedData,
+        fileName,
+        (progress) => {
+          setAnalysisProgress(progress);
+        }
+      );
+
+      if (result.success) {
+        toast.success(`✅ Análise concluída! ${result.summary?.total_recommendations || 0} recomendações geradas.`, {
+          description: `Economia estimada: ${result.summary?.estimated_overall_improvement_percent?.toFixed(1) || 0}% no tempo de picking`
+        });
+
+        // Clear upload data
+        setUploadedData(null);
+        setFileName("");
+        setShowUploadDialog(false);
+        setIsProcessing(false);
+
+        // Reload dashboard data
+        await loadDashboardData();
+      }
+    } catch (error: any) {
+      console.error('Error processing data:', error);
+      toast.error("Erro ao processar análise", {
+        description: error.message || "Tente novamente ou contate o suporte"
+      });
       setIsProcessing(false);
     }
   };
+
+  const loadDashboardData = async () => {
+    if (!user) return;
+
+    // Get user's warehouse
+    const { data: warehouse } = await supabase
+      .from('warehouses')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!warehouse) return;
+
+    // Load latest optimization run
+    const run = await getLatestOptimizationRun(warehouse.id);
+    setLatestRun(run);
+
+    // Load ABC distribution
+    const abc = await getABCDistribution(warehouse.id);
+    setAbcDistribution(abc);
+
+    // Load top SKUs
+    const skus = await getTopSKUs(warehouse.id, 10);
+    setTopSKUs(skus);
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -153,7 +218,9 @@ export default function Dashboard() {
             Bem-vindo ao OptiRack
           </h2>
           <p className="text-lg text-neutral-600">
-            Comece fazendo o upload dos seus dados de pedidos para receber recomendações inteligentes
+            {latestRun 
+              ? 'Acompanhe o desempenho das suas análises e otimizações' 
+              : 'Comece fazendo o upload dos seus dados de pedidos para receber recomendações inteligentes'}
           </p>
         </div>
 
@@ -162,96 +229,132 @@ export default function Dashboard() {
           <MetricCard
             icon={Package}
             title="Total SKUs"
-            value="--"
-            changePercent={0}
-            trend="up"
+            value={latestRun?.total_skus_analyzed?.toString() || "--"}
+            changePercent={latestRun ? 12 : undefined}
+            trend={latestRun ? "up" : undefined}
           />
           <MetricCard
             icon={Clock}
             title="Tempo Economizado"
-            value="--"
+            value={latestRun ? `${latestRun.estimated_overall_improvement_percent?.toFixed(1) || 0}%` : "--"}
           />
           <MetricCard
             icon={Navigation}
             title="Distância Reduzida"
-            value="--"
+            value={latestRun ? `${(latestRun.estimated_distance_saved_per_order_m / 1000)?.toFixed(1) || 0} km/dia` : "--"}
           />
           <MetricCard
             icon={Lightbulb}
             title="Recomendações"
-            value="--"
+            value={latestRun ? `${latestRun.recommendations_generated || 0} geradas` : "--"}
           />
         </div>
 
         {/* Getting Started Section */}
-        <GlassCard className="p-8 bg-gradient-to-br from-primary-100/50 to-primary-200/30">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex-1 space-y-3">
-              <h3 className="text-2xl font-bold text-neutral-900">
-                Começe Sua Primeira Análise
-              </h3>
-              <p className="text-neutral-600">
-                Faça upload do seu histórico de pedidos em formato CSV para que nossa IA possa 
-                analisar padrões e gerar recomendações personalizadas de slotting.
-              </p>
-              <ul className="space-y-2 text-sm text-neutral-600">
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary-400" />
-                  Análise ABC automática de velocidade
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary-400" />
-                  Identificação de produtos com afinidade
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary-400" />
-                  Cálculo de ROI e produtividade
-                </li>
-              </ul>
+        {!latestRun && (
+          <GlassCard className="p-8 bg-gradient-to-br from-primary-100/50 to-primary-200/30">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex-1 space-y-3">
+                <h3 className="text-2xl font-bold text-neutral-900">
+                  Começe Sua Primeira Análise
+                </h3>
+                <p className="text-neutral-600">
+                  Faça upload do seu histórico de pedidos em formato CSV para que nossa IA possa 
+                  analisar padrões e gerar recomendações personalizadas de slotting.
+                </p>
+                <ul className="space-y-2 text-sm text-neutral-600">
+                  <li className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary-400" />
+                    Análise ABC automática de velocidade
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary-400" />
+                    Identificação de produtos com afinidade
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary-400" />
+                    Cálculo de ROI e produtividade
+                  </li>
+                </ul>
+              </div>
+              <div className="flex flex-col gap-3">
+                <Button size="lg" className="group" onClick={() => setShowUploadDialog(true)}>
+                  <Upload className="mr-2 h-5 w-5" />
+                  Upload de Dados
+                </Button>
+                <Button size="lg" variant="outline">
+                  <BarChart3 className="mr-2 h-5 w-5" />
+                  Ver Tutorial
+                </Button>
+              </div>
             </div>
-            <div className="flex flex-col gap-3">
-              <Button size="lg" className="group" onClick={() => setShowUploadDialog(true)}>
-                <Upload className="mr-2 h-5 w-5" />
-                Upload de Dados
-              </Button>
-              <Button size="lg" variant="outline">
-                <BarChart3 className="mr-2 h-5 w-5" />
-                Ver Tutorial
-              </Button>
-            </div>
-          </div>
-        </GlassCard>
+          </GlassCard>
+        )}
 
         {/* Quick Stats */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <GlassCard className="space-y-4">
-            <h3 className="text-lg font-semibold text-neutral-900">
-              Distribuição ABC
-            </h3>
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center space-y-2">
-                <BarChart3 className="h-16 w-16 text-primary-300 mx-auto" strokeWidth={1.5} />
-                <p className="text-sm text-neutral-600">
-                  Dados aparecerão aqui após o upload
-                </p>
+        {latestRun && (
+          <div className="grid gap-6 md:grid-cols-2">
+            <GlassCard className="space-y-4">
+              <h3 className="text-lg font-semibold text-neutral-900">
+                Distribuição ABC
+              </h3>
+              <div className="flex items-center justify-center h-64">
+                {abcDistribution.length > 0 ? (
+                  <div className="space-y-3 w-full">
+                    {abcDistribution.map(item => (
+                      <div key={item.velocity_class} className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Classe {item.velocity_class}</span>
+                        <span className="text-sm text-neutral-600">{item.sku_count} SKUs ({item.percentage?.toFixed(1)}%)</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center space-y-2">
+                    <BarChart3 className="h-16 w-16 text-primary-300 mx-auto" strokeWidth={1.5} />
+                    <p className="text-sm text-neutral-600">
+                      Dados aparecerão aqui após o upload
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
-          </GlassCard>
+            </GlassCard>
 
-          <GlassCard className="space-y-4">
-            <h3 className="text-lg font-semibold text-neutral-900">
-              Top 10 SKUs Mais Frequentes
-            </h3>
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center space-y-2">
-                <Package className="h-16 w-16 text-primary-300 mx-auto" strokeWidth={1.5} />
-                <p className="text-sm text-neutral-600">
-                  Dados aparecerão aqui após o upload
-                </p>
+            <GlassCard className="space-y-4">
+              <h3 className="text-lg font-semibold text-neutral-900">
+                Top 10 SKUs Mais Frequentes
+              </h3>
+              <div className="flex items-center justify-center h-64">
+                {topSKUs.length > 0 ? (
+                  <div className="space-y-2 w-full">
+                    {topSKUs.slice(0, 10).map((sku, index) => (
+                      <div key={sku.id} className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{index + 1}. {sku.sku_code}</span>
+                        <span className="text-neutral-600">{sku.pick_frequency} picks</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center space-y-2">
+                    <Package className="h-16 w-16 text-primary-300 mx-auto" strokeWidth={1.5} />
+                    <p className="text-sm text-neutral-600">
+                      Dados aparecerão aqui após o upload
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
-          </GlassCard>
-        </div>
+            </GlassCard>
+          </div>
+        )}
+
+        {/* Upload Button for existing runs */}
+        {latestRun && (
+          <div className="flex justify-center">
+            <Button size="lg" onClick={() => setShowUploadDialog(true)}>
+              <Upload className="mr-2 h-5 w-5" />
+              Nova Análise
+            </Button>
+          </div>
+        )}
       </main>
 
       {/* Upload Dialog */}
@@ -275,31 +378,36 @@ export default function Dashboard() {
               <>
                 <DataPreview data={uploadedData} fileName={fileName} />
                 
-                <div className="flex justify-end gap-3">
+                {isProcessing && (
+                  <div className="mt-6 space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-neutral-600 font-medium">{analysisProgress.stage}</span>
+                      <span className="text-primary-500 font-semibold">{analysisProgress.percent}%</span>
+                    </div>
+                    <Progress value={analysisProgress.percent} className="h-3" />
+                    <p className="text-xs text-neutral-500 text-center">
+                      Processando análise completa com IA... Isso pode levar até 60 segundos.
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex gap-3 mt-4">
                   <Button 
                     variant="outline" 
                     onClick={() => {
                       setUploadedData(null);
                       setFileName("");
                     }}
+                    disabled={isProcessing}
                   >
                     Limpar
                   </Button>
                   <Button 
                     onClick={handleProcessData}
                     disabled={isProcessing}
+                    className="flex-1"
                   >
-                    {isProcessing ? (
-                      <>
-                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        Processando...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Processar Análise
-                      </>
-                    )}
+                    {isProcessing ? "Processando..." : "Processar Análise"}
                   </Button>
                 </div>
               </>
