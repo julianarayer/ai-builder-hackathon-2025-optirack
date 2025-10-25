@@ -81,7 +81,7 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section 
-        className="relative min-h-screen flex items-center overflow-hidden pt-24"
+        className="relative min-h-screen flex items-center overflow-hidden pt-24 rounded-b-[48px]"
         style={{
           backgroundImage: `linear-gradient(
             to right,
@@ -110,13 +110,6 @@ export default function Landing() {
       >
         <div className="container mx-auto px-4 py-20 relative z-10">
           <div className="max-w-2xl space-y-8 animate-fade-in">
-            <div className="inline-flex items-center gap-2 rounded-full glass-card px-4 py-2 bg-white/90 backdrop-blur-md">
-              <div className="h-2 w-2 rounded-full bg-primary-400 animate-pulse" />
-              <span className="text-sm font-medium text-neutral-700">
-                O futuro do armazenamento é inteligente - é OptiRack
-              </span>
-            </div>
-            
             <h1 className="text-5xl font-bold leading-tight lg:text-6xl" style={{ textShadow: '0 2px 4px rgba(255,255,255,0.8)' }}>
               <span className="bg-gradient-to-r from-primary-300 to-primary-400 bg-clip-text text-transparent" style={{ textShadow: 'none' }}>
                 Otimize seu armazém
