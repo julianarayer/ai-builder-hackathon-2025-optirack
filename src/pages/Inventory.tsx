@@ -21,7 +21,8 @@ import {
   getTasks,
   createReplenishmentTask
 } from "@/services/inventoryService";
-import { Upload, AlertCircle } from "lucide-react";
+import { seedDemoData } from "@/services/demoDataService";
+import { Upload, AlertCircle, Database } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Inventory() {
@@ -41,6 +42,7 @@ export default function Inventory() {
   const [slotHealth, setSlotHealth] = useState([]);
   const [agingItems, setAgingItems] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -118,6 +120,20 @@ export default function Inventory() {
     }
   };
 
+  const handleSeedDemoData = async () => {
+    try {
+      setSeeding(true);
+      await seedDemoData();
+      toast.success('Dados de demonstração criados com sucesso!');
+      setTimeout(() => loadData(), 1000);
+    } catch (error) {
+      console.error('Error seeding demo data:', error);
+      toast.error('Erro ao criar dados de demonstração');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   if (loading) {
     return (
       <SidebarProvider>
@@ -144,10 +160,16 @@ export default function Inventory() {
                 Supervisão enxuta e decisões de reabastecimento
               </p>
             </div>
-            <Button variant="outline">
-              <Upload className="h-4 w-4 mr-2" />
-              Importar CSV
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleSeedDemoData} disabled={seeding}>
+                <Database className="h-4 w-4 mr-2" />
+                {seeding ? 'Criando...' : 'Criar dados demo'}
+              </Button>
+              <Button variant="outline">
+                <Upload className="h-4 w-4 mr-2" />
+                Importar CSV
+              </Button>
+            </div>
           </div>
 
           {pickfaceHealth.length === 0 && (
