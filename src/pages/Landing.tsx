@@ -62,7 +62,17 @@ export default function Landing() {
             rgba(255, 255, 255, 0.30) 70%,
             rgba(255, 255, 255, 0.10) 85%,
             rgba(255, 255, 255, 0) 100%
-          ), url(${warehouseHero})`,
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0) 60%,
+            rgba(255, 255, 255, 0.3) 75%,
+            rgba(255, 255, 255, 0.6) 85%,
+            rgba(255, 255, 255, 0.9) 95%,
+            rgba(255, 255, 255, 1) 100%
+          ),
+          url(${warehouseHero})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -73,19 +83,20 @@ export default function Landing() {
             <div className="inline-flex items-center gap-2 rounded-full glass-card px-4 py-2 bg-white/90 backdrop-blur-md">
               <div className="h-2 w-2 rounded-full bg-primary-400 animate-pulse" />
               <span className="text-sm font-medium text-neutral-700">
-                Powered by AI
+                O futuro do armazenamento é inteligente - é OptiRack
               </span>
             </div>
             
             <h1 className="text-5xl font-bold leading-tight lg:text-6xl" style={{ textShadow: '0 2px 4px rgba(255,255,255,0.8)' }}>
-              <span className="gradient-text">Otimize Seu Armazém</span>
+              <span className="bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
+                Otimize seu armazém
+              </span>
               <br />
               <span className="text-neutral-900">com Inteligência Artificial</span>
             </h1>
             
             <p className="text-xl text-neutral-600 max-w-2xl" style={{ textShadow: '0 1px 2px rgba(255,255,255,0.8)' }}>
-              Reduza até 40% do tempo de picking com recomendações inteligentes de slotting. 
-              Análise ABC, afinidade de produtos e otimização de rotas em um só lugar.
+              Menos caminho, mais entrega. Reorganize SKUs com base em dados reais com recomendações inteligentes - Análise ABC, afinidade de produtos e otimização de rotas em um só lugar.
             </p>
             
             <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
