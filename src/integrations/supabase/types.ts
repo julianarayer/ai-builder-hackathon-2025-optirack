@@ -77,6 +77,128 @@ export type Database = {
           },
         ]
       }
+      demand_stats: {
+        Row: {
+          avg_daily: number
+          calculated_at: string | null
+          horizon_days: number
+          id: string
+          sku_id: string
+          std_daily: number
+          warehouse_id: string
+        }
+        Insert: {
+          avg_daily?: number
+          calculated_at?: string | null
+          horizon_days?: number
+          id?: string
+          sku_id: string
+          std_daily?: number
+          warehouse_id: string
+        }
+        Update: {
+          avg_daily?: number
+          calculated_at?: string | null
+          horizon_days?: number
+          id?: string
+          sku_id?: string
+          std_daily?: number
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_stats_sku_id_fkey"
+            columns: ["sku_id"]
+            isOneToOne: false
+            referencedRelation: "skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_stats_sku_id_fkey"
+            columns: ["sku_id"]
+            isOneToOne: false
+            referencedRelation: "v_top_skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_stats_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_snapshots: {
+        Row: {
+          allocated: number
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          in_transit: number
+          last_move_at: string | null
+          lot: string | null
+          on_hand: number
+          pickface_max: number | null
+          pickface_min: number | null
+          sku_id: string
+          updated_at: string | null
+          warehouse_id: string
+        }
+        Insert: {
+          allocated?: number
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          in_transit?: number
+          last_move_at?: string | null
+          lot?: string | null
+          on_hand?: number
+          pickface_max?: number | null
+          pickface_min?: number | null
+          sku_id: string
+          updated_at?: string | null
+          warehouse_id: string
+        }
+        Update: {
+          allocated?: number
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          in_transit?: number
+          last_move_at?: string | null
+          lot?: string | null
+          on_hand?: number
+          pickface_max?: number | null
+          pickface_min?: number | null
+          sku_id?: string
+          updated_at?: string | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_snapshots_sku_id_fkey"
+            columns: ["sku_id"]
+            isOneToOne: false
+            referencedRelation: "skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_snapshots_sku_id_fkey"
+            columns: ["sku_id"]
+            isOneToOne: false
+            referencedRelation: "v_top_skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_snapshots_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       optimization_runs: {
         Row: {
           analysis_end_date: string | null
@@ -367,6 +489,64 @@ export type Database = {
           },
         ]
       }
+      replenishment_rules: {
+        Row: {
+          created_at: string | null
+          id: string
+          lead_time_days: number
+          pickface_max: number
+          pickface_min: number
+          sku_id: string
+          updated_at: string | null
+          warehouse_id: string
+          z_value: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lead_time_days?: number
+          pickface_max?: number
+          pickface_min?: number
+          sku_id: string
+          updated_at?: string | null
+          warehouse_id: string
+          z_value?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lead_time_days?: number
+          pickface_max?: number
+          pickface_min?: number
+          sku_id?: string
+          updated_at?: string | null
+          warehouse_id?: string
+          z_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "replenishment_rules_sku_id_fkey"
+            columns: ["sku_id"]
+            isOneToOne: false
+            referencedRelation: "skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "replenishment_rules_sku_id_fkey"
+            columns: ["sku_id"]
+            isOneToOne: false
+            referencedRelation: "v_top_skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "replenishment_rules_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       skus: {
         Row: {
           category: string | null
@@ -431,6 +611,70 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "skus_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      slot_capacity: {
+        Row: {
+          capacity_units: number
+          capacity_weight: number | null
+          created_at: string | null
+          current_sku_id: string | null
+          distance_to_pack: number | null
+          id: string
+          occupied_pct: number
+          slot_id: string
+          updated_at: string | null
+          warehouse_id: string
+          zone: string | null
+        }
+        Insert: {
+          capacity_units?: number
+          capacity_weight?: number | null
+          created_at?: string | null
+          current_sku_id?: string | null
+          distance_to_pack?: number | null
+          id?: string
+          occupied_pct?: number
+          slot_id: string
+          updated_at?: string | null
+          warehouse_id: string
+          zone?: string | null
+        }
+        Update: {
+          capacity_units?: number
+          capacity_weight?: number | null
+          created_at?: string | null
+          current_sku_id?: string | null
+          distance_to_pack?: number | null
+          id?: string
+          occupied_pct?: number
+          slot_id?: string
+          updated_at?: string | null
+          warehouse_id?: string
+          zone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slot_capacity_current_sku_id_fkey"
+            columns: ["current_sku_id"]
+            isOneToOne: false
+            referencedRelation: "skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slot_capacity_current_sku_id_fkey"
+            columns: ["current_sku_id"]
+            isOneToOne: false
+            referencedRelation: "v_top_skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slot_capacity_warehouse_id_fkey"
             columns: ["warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
@@ -529,6 +773,79 @@ export type Database = {
           },
           {
             foreignKeyName: "slotting_recommendations_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks_queue: {
+        Row: {
+          assignee: string | null
+          completed_at: string | null
+          created_at: string | null
+          from_slot: string | null
+          id: string
+          notes: string | null
+          priority: number
+          qty: number | null
+          sku_id: string | null
+          status: string
+          task_type: string
+          to_slot: string | null
+          updated_at: string | null
+          warehouse_id: string
+        }
+        Insert: {
+          assignee?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          from_slot?: string | null
+          id?: string
+          notes?: string | null
+          priority?: number
+          qty?: number | null
+          sku_id?: string | null
+          status?: string
+          task_type: string
+          to_slot?: string | null
+          updated_at?: string | null
+          warehouse_id: string
+        }
+        Update: {
+          assignee?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          from_slot?: string | null
+          id?: string
+          notes?: string | null
+          priority?: number
+          qty?: number | null
+          sku_id?: string | null
+          status?: string
+          task_type?: string
+          to_slot?: string | null
+          updated_at?: string | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_queue_sku_id_fkey"
+            columns: ["sku_id"]
+            isOneToOne: false
+            referencedRelation: "skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_queue_sku_id_fkey"
+            columns: ["sku_id"]
+            isOneToOne: false
+            referencedRelation: "v_top_skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_queue_warehouse_id_fkey"
             columns: ["warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"

@@ -4,6 +4,7 @@ import {
   Package,
   History,
   PieChart,
+  PackageSearch,
   User,
   ChevronLeft,
 } from "lucide-react";
@@ -41,6 +42,11 @@ const menuItems = [
     title: "Distribuição ABC",
     url: "/distribuicao-abc",
     icon: PieChart,
+  },
+  {
+    title: "Estoque",
+    url: "/estoque",
+    icon: PackageSearch,
   },
   {
     title: "Perfil",
