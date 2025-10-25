@@ -9,16 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowLeft, Package, Grid3x3, Layers } from "lucide-react";
 import { toast } from "sonner";
-
 interface CategorySummary {
   category: string;
   count: number;
@@ -29,7 +22,6 @@ interface CategorySummary {
     C: number;
   };
 }
-
 interface SKUDetail {
   id: string;
   sku_code: string;
@@ -39,67 +31,60 @@ interface SKUDetail {
   pick_frequency: number;
   current_location: string | null;
 }
-
 export default function SKUsAnalysis() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const analysisId = searchParams.get('runId');
-  
   const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryDetails, setCategoryDetails] = useState<SKUDetail[]>([]);
   const [totalSKUs, setTotalSKUs] = useState(0);
-
   useEffect(() => {
     loadCategoriesData();
   }, [analysisId]);
-
   const loadCategoriesData = async () => {
     try {
       setIsLoading(true);
 
       // Get user's warehouse
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         navigate('/login');
         return;
       }
-
-      const { data: warehouse } = await supabase
-        .from('warehouses')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: warehouse
+      } = await supabase.from('warehouses').select('id').eq('user_id', user.id).single();
       if (!warehouse) {
         toast.error('Armazém não encontrado');
         return;
       }
 
       // Get SKUs with categories
-      const { data: skus, error } = await supabase
-        .from('skus')
-        .select('id, sku_code, sku_name, category, velocity_class, pick_frequency, current_location')
-        .eq('warehouse_id', warehouse.id)
-        .order('pick_frequency', { ascending: false });
-
+      const {
+        data: skus,
+        error
+      } = await supabase.from('skus').select('id, sku_code, sku_name, category, velocity_class, pick_frequency, current_location').eq('warehouse_id', warehouse.id).order('pick_frequency', {
+        ascending: false
+      });
       if (error) {
         console.error('Error loading SKUs:', error);
         toast.error('Erro ao carregar SKUs');
         return;
       }
-
       if (!skus || skus.length === 0) {
         toast.info('Nenhum SKU encontrado. Faça uma análise primeiro.');
         return;
       }
-
       setTotalSKUs(skus.length);
 
       // Group by category
       const categoryMap = new Map<string, SKUDetail[]>();
-      
       skus.forEach(sku => {
         const cat = sku.category || 'Sem Categoria';
         if (!categoryMap.has(cat)) {
@@ -113,20 +98,18 @@ export default function SKUsAnalysis() {
         const velocityBreakdown = {
           A: items.filter(s => s.velocity_class === 'A').length,
           B: items.filter(s => s.velocity_class === 'B').length,
-          C: items.filter(s => s.velocity_class === 'C').length,
+          C: items.filter(s => s.velocity_class === 'C').length
         };
-
         return {
           category,
           count: items.length,
-          percentage: (items.length / skus.length) * 100,
-          velocity_breakdown: velocityBreakdown,
+          percentage: items.length / skus.length * 100,
+          velocity_breakdown: velocityBreakdown
         };
       });
 
       // Sort by count descending
       summaries.sort((a, b) => b.count - a.count);
-
       setCategories(summaries);
       setIsLoading(false);
     } catch (error) {
@@ -135,67 +118,56 @@ export default function SKUsAnalysis() {
       setIsLoading(false);
     }
   };
-
   const handleCategoryClick = async (category: string) => {
     setSelectedCategory(category);
 
     // Get user's warehouse
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) return;
-
-    const { data: warehouse } = await supabase
-      .from('warehouses')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
+    const {
+      data: warehouse
+    } = await supabase.from('warehouses').select('id').eq('user_id', user.id).single();
     if (!warehouse) return;
 
     // Load SKUs for this category
-    const { data: skus } = await supabase
-      .from('skus')
-      .select('id, sku_code, sku_name, category, velocity_class, pick_frequency, current_location')
-      .eq('warehouse_id', warehouse.id)
-      .eq('category', category === 'Sem Categoria' ? null : category)
-      .order('pick_frequency', { ascending: false });
-
-    setCategoryDetails((skus as SKUDetail[]) || []);
+    const {
+      data: skus
+    } = await supabase.from('skus').select('id, sku_code, sku_name, category, velocity_class, pick_frequency, current_location').eq('warehouse_id', warehouse.id).eq('category', category === 'Sem Categoria' ? null : category).order('pick_frequency', {
+      ascending: false
+    });
+    setCategoryDetails(skus as SKUDetail[] || []);
   };
-
   const getVelocityColor = (velocity: string | null) => {
     switch (velocity) {
-      case 'A': return 'bg-green-100 text-green-800 border-green-300';
-      case 'B': return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'C': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      default: return 'bg-neutral-100 text-neutral-600 border-neutral-300';
+      case 'A':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'B':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'C':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      default:
+        return 'bg-neutral-100 text-neutral-600 border-neutral-300';
     }
   };
-
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50 flex items-center justify-center">
         <div className="shimmer h-12 w-48 rounded-2xl" />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
+  return <div className="min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/dashboard')}
-              className="mb-2"
-            >
+            <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-2">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar ao Dashboard
             </Button>
-            <h1 className="text-3xl font-bold text-neutral-900">
-              Análise de SKUs por Categoria
-            </h1>
+            <h1 className="text-3xl font-bold text-neutral-900">Análise de SKUs por categoria</h1>
             <p className="text-lg text-neutral-600">
               {totalSKUs} SKUs analisados em {categories.length} categorias
             </p>
@@ -207,13 +179,7 @@ export default function SKUsAnalysis() {
 
         {/* Summary Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((cat) => (
-            <GlassCard
-              key={cat.category}
-              hover
-              onClick={() => handleCategoryClick(cat.category)}
-              className="p-6 cursor-pointer transition-all hover:scale-105"
-            >
+          {categories.map(cat => <GlassCard key={cat.category} hover onClick={() => handleCategoryClick(cat.category)} className="p-6 cursor-pointer transition-all hover:scale-105">
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -239,30 +205,23 @@ export default function SKUsAnalysis() {
                 <div className="pt-4 border-t border-neutral-200">
                   <p className="text-xs font-medium text-neutral-600 mb-2">Distribuição ABC:</p>
                   <div className="flex gap-2">
-                    {cat.velocity_breakdown.A > 0 && (
-                      <Badge className={getVelocityColor('A')}>
+                    {cat.velocity_breakdown.A > 0 && <Badge className={getVelocityColor('A')}>
                         A: {cat.velocity_breakdown.A}
-                      </Badge>
-                    )}
-                    {cat.velocity_breakdown.B > 0 && (
-                      <Badge className={getVelocityColor('B')}>
+                      </Badge>}
+                    {cat.velocity_breakdown.B > 0 && <Badge className={getVelocityColor('B')}>
                         B: {cat.velocity_breakdown.B}
-                      </Badge>
-                    )}
-                    {cat.velocity_breakdown.C > 0 && (
-                      <Badge className={getVelocityColor('C')}>
+                      </Badge>}
+                    {cat.velocity_breakdown.C > 0 && <Badge className={getVelocityColor('C')}>
                         C: {cat.velocity_breakdown.C}
-                      </Badge>
-                    )}
+                      </Badge>}
                   </div>
                 </div>
               </div>
-            </GlassCard>
-          ))}
+            </GlassCard>)}
         </div>
 
         {/* Category Details Modal */}
-        <Dialog open={selectedCategory !== null} onOpenChange={(open) => !open && setSelectedCategory(null)}>
+        <Dialog open={selectedCategory !== null} onOpenChange={open => !open && setSelectedCategory(null)}>
           <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-3">
@@ -286,13 +245,7 @@ export default function SKUsAnalysis() {
                   </tr>
                 </thead>
                 <tbody>
-                  {categoryDetails.map((sku, index) => (
-                    <tr 
-                      key={sku.id} 
-                      className={`border-b border-neutral-100 hover:bg-primary-50 transition-colors ${
-                        index % 2 === 0 ? 'bg-white' : 'bg-neutral-50'
-                      }`}
-                    >
+                  {categoryDetails.map((sku, index) => <tr key={sku.id} className={`border-b border-neutral-100 hover:bg-primary-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-neutral-50'}`}>
                       <td className="py-4 px-4 text-sm font-medium text-neutral-900">{sku.sku_code}</td>
                       <td className="py-4 px-4 text-sm text-neutral-700">{sku.sku_name || '--'}</td>
                       <td className="py-4 px-4 text-center">
@@ -304,15 +257,13 @@ export default function SKUsAnalysis() {
                         {sku.pick_frequency}
                       </td>
                       <td className="py-4 px-4 text-sm text-neutral-600">{sku.current_location || '--'}</td>
-                    </tr>
-                  ))}
+                    </tr>)}
                 </tbody>
               </table>
             </div>
 
             {/* Summary Footer */}
-            {categoryDetails.length > 0 && (
-              <div className="mt-4 p-4 bg-primary-50 rounded-lg border border-primary-100">
+            {categoryDetails.length > 0 && <div className="mt-4 p-4 bg-primary-50 rounded-lg border border-primary-100">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <p className="text-xs font-medium text-neutral-600 mb-1">Total SKUs</p>
@@ -331,14 +282,12 @@ export default function SKUsAnalysis() {
                     </p>
                   </div>
                 </div>
-              </div>
-            )}
+              </div>}
           </DialogContent>
         </Dialog>
 
         {/* Empty State */}
-        {!isLoading && categories.length === 0 && (
-          <GlassCard className="p-12 text-center">
+        {!isLoading && categories.length === 0 && <GlassCard className="p-12 text-center">
             <Grid3x3 className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-neutral-900 mb-2">
               Nenhum SKU Encontrado
@@ -349,9 +298,7 @@ export default function SKUsAnalysis() {
             <Button onClick={() => navigate('/dashboard')}>
               Ir para Dashboard
             </Button>
-          </GlassCard>
-        )}
+          </GlassCard>}
       </div>
-    </div>
-  );
+    </div>;
 }
