@@ -15,7 +15,8 @@ import { DataPreview } from "@/components/upload/DataPreview";
 import { ColumnMappingModal } from "@/components/upload/ColumnMappingModal";
 import { Progress } from "@/components/ui/progress";
 import { ABCExplanationDialog } from "@/components/ui/abc-explanation-dialog";
-import { UserProfileSheet } from "@/components/profile/UserProfileSheet";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/AppSidebar";
 import {
   Package,
   Clock,
@@ -56,8 +57,6 @@ export default function Dashboard() {
   const [showMappingModal, setShowMappingModal] = useState(false);
   const [pendingMappingData, setPendingMappingData] = useState<any>(null);
   const [showABCExplanation, setShowABCExplanation] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [warehouseProfile, setWarehouseProfile] = useState<any>(null);
 
   useEffect(() => {
     // Check auth state
@@ -214,22 +213,9 @@ export default function Dashboard() {
     setTopSKUs(skus);
   };
 
-  const loadWarehouseProfile = async () => {
-    if (!user) return;
-    
-    const { data } = await supabase
-      .from('warehouse_profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-    
-    setWarehouseProfile(data);
-  };
-
   useEffect(() => {
     if (user) {
       loadDashboardData();
-      loadWarehouseProfile();
     }
   }, [user]);
 
@@ -242,7 +228,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
+        <AppSidebar />
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-neutral-200/50">
         <div className="container mx-auto px-6 py-4">
@@ -255,18 +243,10 @@ export default function Dashboard() {
 
             {/* Right side actions */}
             <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost"
-                onClick={() => navigate('/historico')}
-                className="hidden md:flex"
-              >
-                <History className="mr-2 h-4 w-4" />
-                Histórico
-              </Button>
               
               <div 
                 className="flex items-center gap-2 px-3 py-2 rounded-full bg-neutral-100/80 hover:bg-neutral-100 transition-colors cursor-pointer"
-                onClick={() => setIsProfileOpen(true)}
+                onClick={() => navigate('/perfil')}
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-200">
                   <UserIcon className="h-4 w-4 text-neutral-900" />
@@ -293,6 +273,8 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Main Content Wrapper */}
+      <div className="flex-1 overflow-auto">
       {/* Spacer for fixed header */}
       <div className="h-[72px]" />
 
@@ -543,6 +525,7 @@ export default function Dashboard() {
           </div>
         )}
       </main>
+      </div>
 
       {/* Upload Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
@@ -624,17 +607,7 @@ export default function Dashboard() {
         isOpen={showABCExplanation} 
         onClose={() => setShowABCExplanation(false)} 
       />
-
-      {/* User Profile Sheet */}
-      {user && (
-        <UserProfileSheet
-          open={isProfileOpen}
-          onOpenChange={setIsProfileOpen}
-          user={user}
-          warehouseProfile={warehouseProfile}
-          onUpdate={loadWarehouseProfile}
-        />
-      )}
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }

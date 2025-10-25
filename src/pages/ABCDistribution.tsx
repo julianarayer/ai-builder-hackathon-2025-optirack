@@ -8,6 +8,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/AppSidebar";
 import { TrendingUp, Package, Box, Archive, Boxes, Sparkles, MapPin, ArrowRight, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 
@@ -212,7 +214,10 @@ const ABCDistribution = () => {
   const colors = classColors[activeClass];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-primary-100 to-secondary-50">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-primary-50 via-primary-100 to-secondary-50">
+        <AppSidebar />
+        <div className="flex-1 overflow-auto">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-neutral-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -543,7 +548,9 @@ const ABCDistribution = () => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 

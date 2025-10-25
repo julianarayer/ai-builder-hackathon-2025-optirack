@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { getAnalysesByMonth, getCalendarData } from "@/services/warehouseAnalysis";
@@ -84,7 +86,10 @@ export default function AnalysisHistory() {
   const monthName = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-primary-50 to-neutral-100 p-4 md:p-8">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-neutral-50 via-primary-50 to-neutral-100">
+        <AppSidebar />
+        <div className="flex-1 overflow-auto p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -151,6 +156,8 @@ export default function AnalysisHistory() {
           isLoading={isLoading}
         />
       </div>
-    </div>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }

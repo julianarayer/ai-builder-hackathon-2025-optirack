@@ -10,6 +10,8 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ArrowLeft, Package, Grid3x3, Layers } from "lucide-react";
 import { toast } from "sonner";
 interface CategorySummary {
@@ -158,7 +160,10 @@ export default function SKUsAnalysis() {
         <div className="shimmer h-12 w-48 rounded-2xl" />
       </div>;
   }
-  return <div className="min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
+  return <SidebarProvider>
+    <div className="min-h-screen flex w-full bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
+      <AppSidebar />
+      <div className="flex-1 overflow-auto">
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -300,5 +305,7 @@ export default function SKUsAnalysis() {
             </Button>
           </GlassCard>}
       </div>
-    </div>;
+      </div>
+    </div>
+  </SidebarProvider>;
 }
