@@ -4,10 +4,17 @@
 
 /* OptiRack Design System - Apple-style Glassmorphism */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap');
 
 @layer base {
   :root {
+    /* Apple-like Typography Tokens */
+    --ui-font: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --title-weight: 500;
+    --text-weight: 400;
+    --kpi-weight: 500;
+    --subtle-weight: 400;
+    
     /* Rosa Pastel Palette */
     --primary-50: 0 100% 97%;        /* #FFF5F7 */
     --primary-100: 0 100% 95%;       /* #FFE5EA */
@@ -15,6 +22,15 @@
     --primary-300: 348 100% 85%;     /* #FFB5C5 */
     --primary-400: 345 100% 78%;     /* #FF8FAA */
     --primary-500: 342 100% 71%;     /* #FF6B8F */
+    
+    /* Refined Colors - OptiRack Apple Style */
+    --primary-accent: 351 100% 71%;  /* #ff6f91 Rosa principal */
+    --primary-soft: 351 100% 92%;    /* #ffd7e0 Rosa suave */
+    --gray-ink: 0 0% 11%;            /* #1c1c1e Texto principal */
+    --gray-muted: 0 0% 29%;          /* #4a4a4a Texto secundário */
+    --gray-subtle: 220 9% 46%;       /* #6b7280 Labels */
+    --surface: 0 0% 100%;            /* #ffffff Cards */
+    --bg-subtle: 0 0% 98%;           /* #fafafa Background */
     
     /* Neutral Apple Palette */
     --neutral-50: 0 0% 98%;          /* #FAFAFA */
@@ -24,6 +40,12 @@
     --neutral-400: 240 2% 53%;       /* #86868B */
     --neutral-500: 240 2% 45%;       /* #6E6E73 */
     --neutral-900: 0 0% 11%;         /* #1D1D1F */
+    
+    /* Spacing & Layout */
+    --spacing-card: 24px;
+    --spacing-section: 48px;
+    --radius-card: 16px;
+    --shadow-apple: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06);
     
     /* Semantic Colors */
     --success: 142 71% 45%;          /* Verde suave */
@@ -103,24 +125,75 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-family: var(--ui-font);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Aplicar apenas em páginas que NÃO sejam Landing */
+  body:not(.page-landing) {
+    font-family: var(--ui-font);
+    color: hsl(var(--gray-ink));
+    letter-spacing: -0.01em;
+    background: hsl(var(--bg-subtle));
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Títulos refinados (peso 500, não 600) */
+  body:not(.page-landing) h1,
+  body:not(.page-landing) h2,
+  body:not(.page-landing) h3,
+  body:not(.page-landing) h4,
+  body:not(.page-landing) h5,
+  body:not(.page-landing) h6 {
+    font-weight: var(--title-weight);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: hsl(var(--gray-ink));
+    text-transform: none;
+    margin-bottom: 12px;
+  }
+
+  /* Texto padrão suave */
+  body:not(.page-landing) p,
+  body:not(.page-landing) span:not(.kpi-value),
+  body:not(.page-landing) label,
+  body:not(.page-landing) li {
+    font-weight: var(--text-weight);
+    line-height: 1.45;
+    color: hsl(var(--gray-muted));
+    text-transform: none;
+  }
+
+  /* KPIs e números */
+  body:not(.page-landing) .kpi-value {
+    font-weight: var(--kpi-weight);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.015em;
+  }
+
+  /* Textos sutis */
+  body:not(.page-landing) .text-subtle {
+    color: hsl(var(--gray-subtle));
+    font-weight: var(--subtle-weight);
+  }
+
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold;
+    @apply font-medium;
   }
 }
 
 @layer components {
-  /* Glassmorphism Effects */
+  /* Glassmorphism Effects - Apple Style */
   .glass-card {
-    background: hsl(var(--glass-bg));
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow: 0 8px 32px 0 hsl(var(--glass-shadow));
+    border: 1px solid rgba(255, 215, 224, 0.2);
+    box-shadow: var(--shadow-apple);
+    border-radius: var(--radius-card);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .glass-card-hover {
@@ -129,7 +202,34 @@
   
   .glass-card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 48px 0 hsl(var(--glass-shadow-hover));
+    box-shadow: 0 8px 28px rgba(0,0,0,.08);
+  }
+
+  /* Layout e espaçamento Apple-like */
+  body:not(.page-landing) section,
+  body:not(.page-landing) .section {
+    margin-bottom: var(--spacing-section);
+  }
+
+  body:not(.page-landing) .grid {
+    display: grid;
+    gap: var(--spacing-card);
+  }
+
+  /* Cards de métricas */
+  body:not(.page-landing) .metric-card {
+    background: hsl(var(--surface));
+    border-radius: var(--radius-card);
+    padding: var(--spacing-card);
+    box-shadow: var(--shadow-apple);
+  }
+
+  /* Gráficos */
+  body:not(.page-landing) .chart-container {
+    background: hsl(var(--surface));
+    border-radius: var(--radius-card);
+    padding: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
   }
   
   /* Text Gradients */

@@ -28,8 +28,8 @@ export const MetricCard = ({
             <Icon className="h-6 w-6 text-primary-500" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-neutral-500">{title}</span>
-            <span className="text-3xl font-bold text-neutral-900">{value}</span>
+            <span className="text-sm text-subtle">{title}</span>
+            <span className="text-3xl font-medium text-neutral-900 kpi-value">{value}</span>
           </div>
         </div>
         {showChange && (

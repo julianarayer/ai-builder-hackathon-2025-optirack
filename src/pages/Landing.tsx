@@ -49,7 +49,7 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
+    <div className="page-landing min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
       {/* Hero Section */}
       <section 
         className="relative min-h-[90vh] flex items-center overflow-hidden"

@@ -253,8 +253,8 @@ const ABCDistribution = () => {
         <div className="flex items-center gap-3">
           <TrendingUp className="h-8 w-8 text-primary-500" />
           <div>
-            <h1 className="text-3xl font-bold text-neutral-900">Distribuição ABC</h1>
-            <p className="text-sm text-neutral-600">Análise de Velocidade e Otimização de Slotting</p>
+            <h1 className="text-3xl font-medium text-neutral-900">Distribuição ABC</h1>
+            <p className="text-sm text-subtle">Análise de velocidade e otimização de slotting</p>
           </div>
         </div>
 
@@ -279,8 +279,8 @@ const ABCDistribution = () => {
               <GlassCard>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-neutral-600">Total de SKUs</p>
-                    <p className="text-3xl font-bold text-neutral-900">{totalSKUs}</p>
+                    <p className="text-sm text-subtle">Total de SKUs</p>
+                    <p className="text-3xl font-medium text-neutral-900 kpi-value">{totalSKUs}</p>
                   </div>
                   <ClassIcon className={`h-12 w-12 ${colors.text}`} />
                 </div>
@@ -289,8 +289,8 @@ const ABCDistribution = () => {
               <GlassCard>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-neutral-600">Picks Mensais</p>
-                    <p className="text-3xl font-bold text-neutral-900">{totalPicks.toLocaleString()}</p>
+                    <p className="text-sm text-subtle">Picks mensais</p>
+                    <p className="text-3xl font-medium text-neutral-900 kpi-value">{totalPicks.toLocaleString()}</p>
                   </div>
                   <Package className="h-12 w-12 text-blue-500" />
                 </div>
@@ -299,9 +299,9 @@ const ABCDistribution = () => {
               <GlassCard>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-neutral-600">Economia Potencial</p>
-                    <p className="text-3xl font-bold text-neutral-900">{Math.round(totalSavings)}m</p>
-                    <p className="text-xs text-neutral-500">por mês</p>
+                    <p className="text-sm text-subtle">Economia potencial</p>
+                    <p className="text-3xl font-medium text-neutral-900 kpi-value">{Math.round(totalSavings)}m</p>
+                    <p className="text-xs text-subtle">por mês</p>
                   </div>
                   <TrendingUp className="h-12 w-12 text-green-500" />
                 </div>
@@ -315,8 +315,8 @@ const ABCDistribution = () => {
                   <Sparkles className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-                    🤖 Estratégias Inteligentes para Classe {activeClass}
+                  <h3 className="text-lg font-medium text-neutral-900 mb-2">
+                    🤖 Estratégias inteligentes para classe {activeClass}
                   </h3>
                   <ul className="space-y-2">
                     {classStrategies[activeClass].map((strategy, idx) => (
@@ -332,8 +332,8 @@ const ABCDistribution = () => {
 
             {/* SKUs Table */}
             <GlassCard>
-              <h3 className="text-xl font-semibold text-neutral-900 mb-4">
-                SKUs da Classe {activeClass}
+              <h3 className="text-xl font-medium text-neutral-900 mb-4">
+                SKUs da classe {activeClass}
               </h3>
               {loading ? (
                 <div className="text-center py-12 text-neutral-600">Carregando...</div>
@@ -434,24 +434,24 @@ const ABCDistribution = () => {
               {/* SKU Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-neutral-600">Classe de Velocidade</p>
+                  <p className="text-sm text-subtle">Classe de velocidade</p>
                   <Badge variant="default" size="lg" className="mt-1">
                     Classe {selectedSKU.velocity_class}
                   </Badge>
                 </div>
                 <div>
-                  <p className="text-sm text-neutral-600">Categoria</p>
-                  <p className="text-base font-medium">{selectedSKU.category || "-"}</p>
+                  <p className="text-sm text-subtle">Categoria</p>
+                  <p className="text-base font-normal">{selectedSKU.category || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-neutral-600">Picks Mensais</p>
-                  <p className="text-base font-medium">
+                  <p className="text-sm text-subtle">Picks mensais</p>
+                  <p className="text-base font-medium kpi-value">
                     {Math.round(selectedSKU.pick_frequency_monthly || 0)} picks
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-neutral-600">Frequência Total</p>
-                  <p className="text-base font-medium">{selectedSKU.pick_frequency} picks</p>
+                  <p className="text-sm text-subtle">Frequência total</p>
+                  <p className="text-base font-medium kpi-value">{selectedSKU.pick_frequency} picks</p>
                 </div>
               </div>
 
@@ -459,9 +459,9 @@ const ABCDistribution = () => {
               <div className="grid grid-cols-2 gap-4">
                 <GlassCard className="bg-red-50">
                   <div className="space-y-2">
-                    <p className="text-sm font-semibold text-red-600">📍 Posição Atual</p>
+                    <p className="text-sm font-medium text-red-600">📍 Posição atual</p>
                     <div className="space-y-1">
-                      <p className="text-lg font-bold">{selectedSKU.current_location || "-"}</p>
+                      <p className="text-lg font-medium">{selectedSKU.current_location || "-"}</p>
                       <Badge variant="outline" size="sm">
                         Zona {selectedSKU.current_zone || "?"}
                       </Badge>
@@ -471,9 +471,9 @@ const ABCDistribution = () => {
 
                 <GlassCard className="bg-green-50">
                   <div className="space-y-2">
-                    <p className="text-sm font-semibold text-green-600">✅ Posição Recomendada</p>
+                    <p className="text-sm font-medium text-green-600">✅ Posição recomendada</p>
                     <div className="space-y-1">
-                      <p className="text-lg font-bold">
+                      <p className="text-lg font-medium">
                         {selectedSKU.recommendation?.recommended_location || selectedSKU.current_location || "-"}
                       </p>
                       <Badge variant="success" size="sm">
@@ -488,9 +488,9 @@ const ABCDistribution = () => {
               {selectedSKU.recommendation && (
                 <>
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-neutral-900 flex items-center gap-2">
+                    <h4 className="font-medium text-neutral-900 flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-purple-500" />
-                      Razão da Recomendação
+                      Razão da recomendação
                     </h4>
                     <p className="text-sm text-neutral-700 bg-purple-50 p-4 rounded-lg">
                       {selectedSKU.recommendation.reason}
@@ -499,9 +499,9 @@ const ABCDistribution = () => {
 
                   {selectedSKU.recommendation.affinity_note && (
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-neutral-900 flex items-center gap-2">
+                      <h4 className="font-medium text-neutral-900 flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-blue-500" />
-                        Nota de Afinidade
+                        Nota de afinidade
                       </h4>
                       <p className="text-sm text-neutral-700 bg-blue-50 p-4 rounded-lg">
                         {selectedSKU.recommendation.affinity_note}
@@ -511,7 +511,7 @@ const ABCDistribution = () => {
 
                   {selectedSKU.recommendation.related_skus && selectedSKU.recommendation.related_skus.length > 0 && (
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-neutral-900">SKUs Relacionados</h4>
+                      <h4 className="font-medium text-neutral-900">SKUs relacionados</h4>
                       <div className="flex flex-wrap gap-2">
                         {selectedSKU.recommendation.related_skus.map((relatedId) => (
                           <Badge key={relatedId} variant="secondary" size="sm">
@@ -524,15 +524,15 @@ const ABCDistribution = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <GlassCard className="bg-green-50">
-                      <p className="text-sm text-neutral-600">Distância Economizada por Pick</p>
-                      <p className="text-2xl font-bold text-green-600">
+                      <p className="text-sm text-subtle">Distância economizada por pick</p>
+                      <p className="text-2xl font-medium text-green-600 kpi-value">
                         {selectedSKU.distanceSaved.toFixed(1)}m
                       </p>
                     </GlassCard>
 
                     <GlassCard className="bg-blue-50">
-                      <p className="text-sm text-neutral-600">Melhoria Estimada</p>
-                      <p className="text-2xl font-bold text-blue-600">
+                      <p className="text-sm text-subtle">Melhoria estimada</p>
+                      <p className="text-2xl font-medium text-blue-600 kpi-value">
                         {selectedSKU.estimatedImpact.toFixed(1)}%
                       </p>
                     </GlassCard>

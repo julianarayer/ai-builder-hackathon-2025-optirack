@@ -222,7 +222,7 @@ export default function Dashboard() {
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80">
                 <img src={optirackLogo} alt="OptiRack Logo" className="h-8 w-8 object-contain" />
               </div>
-              <h1 className="text-xl font-bold gradient-text">OptiRack AI</h1>
+              <h1 className="text-xl font-medium gradient-text">OptiRack AI</h1>
             </div>
 
             <div className="flex items-center gap-4">
@@ -240,7 +240,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs text-neutral-600">Olá,</span>
-                  <span className="text-sm font-semibold text-neutral-900">
+                  <span className="text-sm font-medium text-neutral-900">
                     {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário'}
                   </span>
                 </div>
@@ -262,10 +262,10 @@ export default function Dashboard() {
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Welcome Section */}
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold text-neutral-900">
+          <h2 className="text-3xl font-medium text-neutral-900">
             Bem-vindo ao OptiRack
           </h2>
-          <p className="text-lg text-neutral-600">
+          <p className="text-lg text-subtle">
             {latestRun 
               ? 'Acompanhe o desempenho das suas análises e otimizações' 
               : 'Comece fazendo o upload dos seus dados de pedidos para receber recomendações inteligentes'}
@@ -305,10 +305,10 @@ export default function Dashboard() {
           <GlassCard className="p-8 bg-gradient-to-br from-primary-100/50 to-primary-200/30">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex-1 space-y-3">
-                <h3 className="text-2xl font-bold text-neutral-900">
-                  Começe Sua Primeira Análise
+                <h3 className="text-2xl font-medium text-neutral-900">
+                  Começe sua primeira análise
                 </h3>
-                <p className="text-neutral-600">
+                <p className="text-subtle">
                   Faça upload do seu histórico de pedidos em formato CSV para que nossa IA possa 
                   analisar padrões e gerar recomendações personalizadas de slotting.
                 </p>
@@ -350,7 +350,7 @@ export default function Dashboard() {
           <div className="grid gap-6 md:grid-cols-2">
             <GlassCard className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-neutral-900">
+                <h3 className="text-lg font-medium text-neutral-900">
                   Distribuição ABC
                 </h3>
                 <button
@@ -409,24 +409,24 @@ export default function Dashboard() {
                                   className="transition-opacity hover:opacity-80 cursor-pointer"
                                   onClick={() => navigate(`/distribuicao-abc?classe=${item.velocity_class}`)}
                                 />
-                                <text
-                                  x={labelX}
-                                  y={labelY}
-                                  textAnchor="middle"
-                                  dominantBaseline="middle"
-                                  className="text-[10px] font-bold fill-white"
-                                  style={{ pointerEvents: 'none' }}
-                                >
-                                  {item.velocity_class}
-                                </text>
-                                <text
-                                  x={labelX}
-                                  y={labelY + 10}
-                                  textAnchor="middle"
-                                  dominantBaseline="middle"
-                                  className="text-[8px] font-medium fill-white"
-                                  style={{ pointerEvents: 'none' }}
-                                >
+                                 <text
+                                   x={labelX}
+                                   y={labelY}
+                                   textAnchor="middle"
+                                   dominantBaseline="middle"
+                                   className="text-[10px] font-medium fill-white"
+                                   style={{ pointerEvents: 'none' }}
+                                 >
+                                   {item.velocity_class}
+                                 </text>
+                                 <text
+                                   x={labelX}
+                                   y={labelY + 10}
+                                   textAnchor="middle"
+                                   dominantBaseline="middle"
+                                   className="text-[8px] font-normal fill-white"
+                                   style={{ pointerEvents: 'none' }}
+                                 >
                                   {percentage.toFixed(0)}%
                                 </text>
                               </g>
@@ -469,8 +469,8 @@ export default function Dashboard() {
             </GlassCard>
 
             <GlassCard className="space-y-4">
-              <h3 className="text-lg font-semibold text-neutral-900">
-                Top 10 SKUs Mais Frequentes
+              <h3 className="text-lg font-medium text-neutral-900">
+                Top 10 SKUs mais frequentes
               </h3>
               <div className="flex items-center justify-center h-64">
                 {topSKUs.length > 0 ? (
