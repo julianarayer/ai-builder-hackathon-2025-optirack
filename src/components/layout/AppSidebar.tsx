@@ -57,12 +57,9 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-neutral-200 z-50">
+    <Sidebar collapsible="icon" className="border-r border-neutral-200">
       <SidebarHeader className="border-b border-neutral-200 p-4">
-        <div 
-          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={() => navigate('/dashboard')}
-        >
+        <div className="flex items-center gap-2">
           <img src={optirackLogo} alt="OptiRack" className="h-8 w-8" />
           {state !== "collapsed" && (
             <span className="text-lg font-medium text-neutral-900">OptiRack</span>

@@ -218,9 +218,8 @@ const ABCDistribution = () => {
       <div className="min-h-screen flex w-full bg-gradient-to-br from-primary-50 via-primary-100 to-secondary-50">
         <AppSidebar />
         <div className="flex-1 overflow-auto">
-          <div className="h-[72px]" />
-          {/* Header */}
-          <div className="bg-white/80 backdrop-blur-sm border-b border-neutral-200 sticky top-0 z-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-neutral-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -418,12 +417,12 @@ const ABCDistribution = () => {
                 </div>
               )}
             </GlassCard>
-            </TabsContent>
-          </Tabs>
-        </div>
+          </TabsContent>
+        </Tabs>
+      </div>
 
-        {/* SKU Details Modal */}
-        <Dialog open={!!selectedSKU} onOpenChange={() => setSelectedSKU(null)}>
+      {/* SKU Details Modal */}
+      <Dialog open={!!selectedSKU} onOpenChange={() => setSelectedSKU(null)}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -548,9 +547,9 @@ const ABCDistribution = () => {
             </div>
           )}
         </DialogContent>
-        </Dialog>
+      </Dialog>
+        </div>
       </div>
-    </div>
     </SidebarProvider>
   );
 };

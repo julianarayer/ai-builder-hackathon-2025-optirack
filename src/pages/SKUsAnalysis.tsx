@@ -164,10 +164,9 @@ export default function SKUsAnalysis() {
     <div className="min-h-screen flex w-full bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
       <AppSidebar />
       <div className="flex-1 overflow-auto">
-        <div className="h-[72px]" />
-        <div className="container mx-auto px-4 py-8 space-y-8">
-          {/* Header */}
-          <div className="flex items-center justify-between">
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div className="space-y-2">
             <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-2">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -224,9 +223,9 @@ export default function SKUsAnalysis() {
                 </div>
               </div>
             </GlassCard>)}
-          </div>
+        </div>
 
-          {/* Category Details Modal */}
+        {/* Category Details Modal */}
         <Dialog open={selectedCategory !== null} onOpenChange={open => !open && setSelectedCategory(null)}>
           <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
@@ -290,22 +289,22 @@ export default function SKUsAnalysis() {
                 </div>
               </div>}
           </DialogContent>
-          </Dialog>
+        </Dialog>
 
-          {/* Empty State */}
-          {!isLoading && categories.length === 0 && <GlassCard className="p-12 text-center">
-              <Grid3x3 className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-neutral-900 mb-2">
-                Nenhum SKU Encontrado
-              </h3>
-              <p className="text-neutral-600 mb-6">
-                Faça uma análise primeiro para visualizar seus SKUs por categoria.
-              </p>
-              <Button onClick={() => navigate('/dashboard')}>
-                Ir para Dashboard
-              </Button>
-            </GlassCard>}
-        </div>
+        {/* Empty State */}
+        {!isLoading && categories.length === 0 && <GlassCard className="p-12 text-center">
+            <Grid3x3 className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
+              Nenhum SKU Encontrado
+            </h3>
+            <p className="text-neutral-600 mb-6">
+              Faça uma análise primeiro para visualizar seus SKUs por categoria.
+            </p>
+            <Button onClick={() => navigate('/dashboard')}>
+              Ir para Dashboard
+            </Button>
+          </GlassCard>}
+      </div>
       </div>
     </div>
   </SidebarProvider>;

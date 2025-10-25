@@ -203,7 +203,6 @@ export default function Profile() {
         <AppSidebar />
 
         <main className="flex-1 overflow-auto">
-          <div className="h-[72px]" />
           <div className="container mx-auto px-6 py-8 max-w-4xl">
             <div className="space-y-8">
               {/* Header */}
