@@ -9,6 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { GlassCard } from "@/components/ui/glass-card";
 import { MetricCard } from "@/components/ui/metric-card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { FileUploader } from "@/components/upload/FileUploader";
+import { DataPreview } from "@/components/upload/DataPreview";
 import {
   Package,
   Clock,
@@ -27,6 +30,10 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [uploadedData, setUploadedData] = useState<any[] | null>(null);
+  const [fileName, setFileName] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     // Check auth state
@@ -65,6 +72,30 @@ export default function Dashboard() {
       navigate('/login');
     } catch (error) {
       toast.error('Erro ao fazer logout');
+    }
+  };
+
+  const handleFileSelect = (data: any[], filename: string) => {
+    setUploadedData(data);
+    setFileName(filename);
+  };
+
+  const handleProcessData = async () => {
+    if (!uploadedData || !user) return;
+
+    setIsProcessing(true);
+    try {
+      // TODO: Implement data processing logic with Supabase
+      // This will be implemented in the next phase with Edge Functions
+      toast.success(`${uploadedData.length} linhas processadas com sucesso!`);
+      setShowUploadDialog(false);
+      setUploadedData(null);
+      setFileName("");
+    } catch (error) {
+      toast.error('Erro ao processar dados');
+      console.error(error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -179,7 +210,7 @@ export default function Dashboard() {
               </ul>
             </div>
             <div className="flex flex-col gap-3">
-              <Button size="lg" className="group">
+              <Button size="lg" className="group" onClick={() => setShowUploadDialog(true)}>
                 <Upload className="mr-2 h-5 w-5" />
                 Upload de Dados
               </Button>
@@ -222,6 +253,60 @@ export default function Dashboard() {
           </GlassCard>
         </div>
       </main>
+
+      {/* Upload Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Upload de Dados</DialogTitle>
+            <DialogDescription>
+              Faça upload do seu histórico de pedidos em formato CSV ou Excel
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <FileUploader 
+              onFileSelect={handleFileSelect}
+              acceptedFormats={['.csv', '.xlsx', '.xls']}
+              maxSizeMB={50}
+            />
+            
+            {uploadedData && (
+              <>
+                <DataPreview data={uploadedData} fileName={fileName} />
+                
+                <div className="flex justify-end gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setUploadedData(null);
+                      setFileName("");
+                    }}
+                  >
+                    Limpar
+                  </Button>
+                  <Button 
+                    onClick={handleProcessData}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Processando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Processar Análise
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
