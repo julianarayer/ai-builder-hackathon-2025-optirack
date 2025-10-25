@@ -67,6 +67,19 @@ export default function Dashboard() {
       }
 
       setUser(session.user);
+      
+      // Check if onboarding is completed
+      const { data: profile } = await supabase
+        .from('warehouse_profiles')
+        .select('onboarding_completed')
+        .eq('user_id', session.user.id)
+        .single();
+      
+      if (!profile?.onboarding_completed) {
+        navigate('/onboarding');
+        return;
+      }
+      
       setIsLoading(false);
     };
 

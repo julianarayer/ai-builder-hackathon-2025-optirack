@@ -90,8 +90,20 @@ export default function Login() {
         if (error) throw error;
 
         if (data.user) {
-          toast.success('Login realizado com sucesso!');
-          navigate('/dashboard');
+          // Check if onboarding is completed
+          const { data: profile } = await supabase
+            .from('warehouse_profiles')
+            .select('onboarding_completed, onboarding_step')
+            .eq('user_id', data.user.id)
+            .single();
+          
+          if (profile?.onboarding_completed) {
+            toast.success('Login realizado com sucesso!');
+            navigate('/dashboard');
+          } else {
+            toast.success('Bem-vindo de volta! Vamos continuar a configuração.');
+            navigate('/onboarding', { state: { resumeStep: profile?.onboarding_step || 1 } });
+          }
         }
       } else {
         const { data, error } = await supabase.auth.signUp({
@@ -108,8 +120,8 @@ export default function Login() {
         if (error) throw error;
 
         if (data.user) {
-          toast.success('Conta criada com sucesso! Verifique seu email.');
-          setMode('login');
+          toast.success('Conta criada! Vamos configurar seu armazém.');
+          navigate('/onboarding');
         }
       }
     } catch (error: any) {

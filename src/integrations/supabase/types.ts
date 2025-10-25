@@ -544,6 +544,72 @@ export type Database = {
           },
         ]
       }
+      warehouse_profiles: {
+        Row: {
+          approximate_positions: number | null
+          blocking_rules: string | null
+          created_at: string | null
+          family_separation_rules: string | null
+          id: string
+          layout_drawing_data: Json | null
+          layout_image_url: string | null
+          max_picking_to_packing_distance_m: number | null
+          num_sectors: number | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
+          operation_type: string | null
+          prioritize_fast_movers: boolean | null
+          separate_by_families: boolean | null
+          total_area_sqm: number | null
+          updated_at: string | null
+          useful_height_m: number | null
+          user_id: string
+          zones: Json | null
+        }
+        Insert: {
+          approximate_positions?: number | null
+          blocking_rules?: string | null
+          created_at?: string | null
+          family_separation_rules?: string | null
+          id?: string
+          layout_drawing_data?: Json | null
+          layout_image_url?: string | null
+          max_picking_to_packing_distance_m?: number | null
+          num_sectors?: number | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          operation_type?: string | null
+          prioritize_fast_movers?: boolean | null
+          separate_by_families?: boolean | null
+          total_area_sqm?: number | null
+          updated_at?: string | null
+          useful_height_m?: number | null
+          user_id: string
+          zones?: Json | null
+        }
+        Update: {
+          approximate_positions?: number | null
+          blocking_rules?: string | null
+          created_at?: string | null
+          family_separation_rules?: string | null
+          id?: string
+          layout_drawing_data?: Json | null
+          layout_image_url?: string | null
+          max_picking_to_packing_distance_m?: number | null
+          num_sectors?: number | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          operation_type?: string | null
+          prioritize_fast_movers?: boolean | null
+          separate_by_families?: boolean | null
+          total_area_sqm?: number | null
+          updated_at?: string | null
+          useful_height_m?: number | null
+          user_id?: string
+          zones?: Json | null
+        }
+        Relationships: []
+      }
       warehouses: {
         Row: {
           created_at: string | null
