@@ -41,6 +41,41 @@ interface AffinityPair {
   recommendation: string;
 }
 
+interface AffinityPairEnhanced {
+  sku_i: string;
+  sku_j: string;
+  support_ij: number;
+  confidence_i_to_j: number;
+  lift: number;
+  phi: number;
+}
+
+interface OrderDistanceSample {
+  order_id: string;
+  items_count: number;
+  sku_codes: string[];
+  distance_m: number;
+  route_points: string[];
+}
+
+interface AnalyticsSnapshot {
+  warehouse_id: string;
+  optimization_run_id: string;
+  abc_distribution: { [key: string]: number };
+  top_affinity_pairs: AffinityPairEnhanced[];
+  avg_distance_per_order_m: number;
+  target_sla_reduction_pct: number;
+  estimated_distance_reduction_pct: number;
+  estimated_time_saved_pct: number;
+  method_notes: {
+    distance_metric: string;
+    path_heuristic: string;
+    min_pair_support: number;
+    fallback_sem_layout: boolean;
+  };
+  order_distance_samples?: OrderDistanceSample[];
+}
+
 interface GeminiRecommendation {
   sku_code: string;
   sku_name: string;
@@ -271,6 +306,305 @@ function estimateDistance(locationA: string, locationB: string): number {
 
 function extractZone(location: string): string {
   return location.charAt(0);
+}
+
+// Calculate Phi (Matthews correlation coefficient)
+function calculatePhi(
+  tp: number, // pedidos com i e j
+  tn: number, // pedidos sem i e sem j
+  fp: number, // pedidos com j e sem i
+  fn: number  // pedidos com i e sem j
+): number {
+  const numerator = (tp * tn) - (fp * fn);
+  const denominator = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
+  
+  if (denominator === 0) return 0;
+  return numerator / denominator;
+}
+
+// Enhanced affinity analysis with Phi coefficient
+function performAffinityAnalysisEnhanced(
+  data: CSVRow[], 
+  skuNames: { [code: string]: string }
+): AffinityPairEnhanced[] {
+  // Agrupar por order_id
+  const orderGroups: { [orderId: string]: Set<string> } = {};
+  
+  data.forEach(row => {
+    if (!orderGroups[row.order_id]) {
+      orderGroups[row.order_id] = new Set();
+    }
+    if (row.quantity > 0) {
+      orderGroups[row.order_id].add(row.sku_code);
+    }
+  });
+
+  const totalOrders = Object.keys(orderGroups).length;
+  
+  // Calcular support individual
+  const skuSupport: { [sku: string]: number } = {};
+  Object.values(orderGroups).forEach(skus => {
+    skus.forEach(sku => {
+      skuSupport[sku] = (skuSupport[sku] || 0) + 1;
+    });
+  });
+  
+  // Filtrar SKUs com support < 1%
+  const validSkus = Object.keys(skuSupport).filter(
+    sku => (skuSupport[sku] / totalOrders) >= 0.01
+  );
+
+  // Calcular métricas de pares
+  const pairMetrics: { [pair: string]: { 
+    tp: number;
+    skuA: string; 
+    skuB: string;
+  } } = {};
+  
+  Object.values(orderGroups).forEach(skus => {
+    const skusArray = Array.from(skus).filter(s => validSkus.includes(s));
+    for (let i = 0; i < skusArray.length; i++) {
+      for (let j = i + 1; j < skusArray.length; j++) {
+        const skuA = skusArray[i];
+        const skuB = skusArray[j];
+        const pairKey = [skuA, skuB].sort().join('|');
+        
+        if (!pairMetrics[pairKey]) {
+          pairMetrics[pairKey] = { tp: 0, skuA, skuB };
+        }
+        pairMetrics[pairKey].tp++;
+      }
+    }
+  });
+
+  // Calcular affinity metrics com Phi
+  const affinityPairs: AffinityPairEnhanced[] = [];
+  
+  Object.values(pairMetrics).forEach(({ tp, skuA, skuB }) => {
+    const supportA = skuSupport[skuA] / totalOrders;
+    const supportB = skuSupport[skuB] / totalOrders;
+    const supportAB = tp / totalOrders;
+    
+    // Filtrar: support(i,j) >= 2%
+    if (supportAB < 0.02) return;
+    
+    const confidence = tp / skuSupport[skuA];
+    const lift = supportAB / (supportA * supportB);
+    
+    // Calcular Phi
+    const fp = skuSupport[skuB] - tp;
+    const fn = skuSupport[skuA] - tp;
+    const tn = totalOrders - tp - fp - fn;
+    
+    const phi = calculatePhi(tp, tn, fp, fn);
+    
+    affinityPairs.push({
+      sku_i: skuA,
+      sku_j: skuB,
+      support_ij: supportAB,
+      confidence_i_to_j: confidence,
+      lift: lift,
+      phi: phi
+    });
+  });
+
+  // Ordenar por lift (desc), desempate por |phi| (desc)
+  affinityPairs.sort((a, b) => {
+    if (Math.abs(b.lift - a.lift) > 0.01) {
+      return b.lift - a.lift;
+    }
+    return Math.abs(b.phi) - Math.abs(a.phi);
+  });
+  
+  return affinityPairs.slice(0, 20); // Top 20
+}
+
+// Calculate average distance per order
+function calculateAvgDistancePerOrder(
+  data: CSVRow[],
+  layoutPlan: any | null,
+  abcAnalysis: ABCAnalysis
+): {
+  avgDistance: number;
+  samples: OrderDistanceSample[];
+  methodNotes: {
+    distance_metric: string;
+    path_heuristic: string;
+    fallback_sem_layout: boolean;
+  };
+} {
+  const orderGroups: { [orderId: string]: string[] } = {};
+  
+  data.forEach(row => {
+    if (!orderGroups[row.order_id]) {
+      orderGroups[row.order_id] = [];
+    }
+    orderGroups[row.order_id].push(row.sku_code);
+  });
+
+  const orderIds = Object.keys(orderGroups);
+  const distances: number[] = [];
+  const samples: OrderDistanceSample[] = [];
+  
+  let useFallback = !layoutPlan || !layoutPlan.shapes || layoutPlan.shapes.length === 0;
+  
+  if (useFallback) {
+    // FALLBACK: Usar posição ordinal baseada em ABC
+    console.log('📍 Layout não disponível. Usando fallback ordinal por ABC.');
+    
+    orderIds.forEach((orderId, idx) => {
+      const skus = orderGroups[orderId];
+      let totalDistance = 0;
+      
+      skus.forEach(sku => {
+        const abcClass = abcAnalysis[sku]?.class || 'C';
+        let estimatedDistance = 0;
+        
+        switch (abcClass) {
+          case 'A': estimatedDistance = 10; break;
+          case 'B': estimatedDistance = 30; break;
+          case 'C': estimatedDistance = 50; break;
+          case 'D': estimatedDistance = 70; break;
+        }
+        
+        totalDistance += estimatedDistance * 2;
+      });
+      
+      distances.push(totalDistance);
+      
+      if (idx < 50) {
+        samples.push({
+          order_id: orderId,
+          items_count: skus.length,
+          sku_codes: skus,
+          distance_m: totalDistance,
+          route_points: [`ABC-based: ${skus.map(s => abcAnalysis[s]?.class || '?').join(',')}`]
+        });
+      }
+    });
+    
+    return {
+      avgDistance: distances.reduce((a, b) => a + b, 0) / distances.length,
+      samples,
+      methodNotes: {
+        distance_metric: 'ordinal',
+        path_heuristic: 'ordinal_fallback',
+        fallback_sem_layout: true
+      }
+    };
+  }
+  
+  // COM LAYOUT: Usar coordenadas simplificadas
+  console.log('📍 Layout disponível. Calculando distância Manhattan.');
+  
+  const skuCoordinates: { [sku: string]: { x: number; y: number } } = {};
+  
+  data.forEach(row => {
+    if (!skuCoordinates[row.sku_code]) {
+      const location = row.current_location;
+      const zone = location.charAt(0);
+      
+      let x = 0, y = 0;
+      switch (zone) {
+        case 'A': x = 10; y = 5; break;
+        case 'B': x = 30; y = 15; break;
+        case 'C': x = 50; y = 25; break;
+        default: x = 40; y = 20; break;
+      }
+      
+      skuCoordinates[row.sku_code] = { x, y };
+    }
+  });
+  
+  const packingPoint = { x: 0, y: 0 };
+  
+  orderIds.forEach((orderId, idx) => {
+    const skus = orderGroups[orderId];
+    const points = [packingPoint];
+    
+    const skuPoints = skus
+      .map(sku => skuCoordinates[sku] || packingPoint)
+      .sort((a, b) => a.x - b.x || a.y - b.y);
+    
+    points.push(...skuPoints);
+    points.push(packingPoint);
+    
+    let totalDistance = 0;
+    for (let i = 1; i < points.length; i++) {
+      const dx = Math.abs(points[i].x - points[i - 1].x);
+      const dy = Math.abs(points[i].y - points[i - 1].y);
+      totalDistance += dx + dy;
+    }
+    
+    distances.push(totalDistance);
+    
+    if (idx < 50) {
+      samples.push({
+        order_id: orderId,
+        items_count: skus.length,
+        sku_codes: skus,
+        distance_m: totalDistance,
+        route_points: points.map(p => `(${p.x},${p.y})`)
+      });
+    }
+  });
+  
+  return {
+    avgDistance: distances.reduce((a, b) => a + b, 0) / distances.length,
+    samples,
+    methodNotes: {
+      distance_metric: 'manhattan',
+      path_heuristic: 's-shape',
+      fallback_sem_layout: false
+    }
+  };
+}
+
+// Calculate SLA estimate
+function calculateSLAEstimate(
+  abcAnalysis: ABCAnalysis,
+  affinityPairs: AffinityPairEnhanced[],
+  data: CSVRow[],
+  targetSLA: number = 15
+): {
+  estimated_distance_reduction_pct: number;
+  estimated_time_saved_pct: number;
+} {
+  const totalPicks = data.reduce((sum, row) => sum + row.quantity, 0);
+  
+  const picksA = Object.entries(abcAnalysis)
+    .filter(([_, info]) => info.class === 'A')
+    .reduce((sum, [code, _]) => {
+      return sum + data
+        .filter(row => row.sku_code === code)
+        .reduce((s, row) => s + row.quantity, 0);
+    }, 0);
+  
+  const sharePicksA = picksA / totalPicks;
+  
+  const topSkus = new Set<string>();
+  affinityPairs.slice(0, 10).forEach(pair => {
+    topSkus.add(pair.sku_i);
+    topSkus.add(pair.sku_j);
+  });
+  
+  const picksTopPairs = data
+    .filter(row => topSkus.has(row.sku_code))
+    .reduce((sum, row) => sum + row.quantity, 0);
+  
+  const shareTopPairs = picksTopPairs / totalPicks;
+  
+  const impactFactor = 0.5 * sharePicksA + 0.5 * shareTopPairs;
+  
+  const maxReduction = Math.min(100 * impactFactor, 100);
+  const estimatedReduction = Math.min(targetSLA, maxReduction);
+  
+  console.log(`📊 SLA Estimate: shareA=${sharePicksA.toFixed(2)}, sharePairs=${shareTopPairs.toFixed(2)}, impact=${impactFactor.toFixed(2)}, reduction=${estimatedReduction.toFixed(1)}%`);
+  
+  return {
+    estimated_distance_reduction_pct: estimatedReduction,
+    estimated_time_saved_pct: estimatedReduction
+  };
 }
 
 async function callGeminiAPI(prompt: string): Promise<GeminiResponse> {
@@ -598,8 +932,60 @@ serve(async (req) => {
     // Perform ABC Analysis
     const abcAnalysis = performABCAnalysis(normalizedData, periodInDays);
 
-    // Perform Affinity Analysis
+    // Perform Affinity Analysis (original for Gemini)
     const affinityPairs = performAffinityAnalysis(normalizedData, skuNames);
+
+    // NOVO: Análise aprimorada com Phi
+    const affinityPairsEnhanced = performAffinityAnalysisEnhanced(normalizedData, skuNames);
+
+    // NOVO: Buscar layout do warehouse profile
+    let layoutPlan = null;
+    try {
+      const { data: warehouseProfile } = await supabase
+        .from('warehouse_profiles')
+        .select('layout_drawing_data')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (warehouseProfile?.layout_drawing_data) {
+        layoutPlan = warehouseProfile.layout_drawing_data;
+      }
+    } catch (err) {
+      console.log('⚠️ Layout não encontrado, usando fallback');
+    }
+
+    // NOVO: Calcular distância média por pedido
+    const { avgDistance, samples, methodNotes } = calculateAvgDistancePerOrder(
+      normalizedData,
+      layoutPlan,
+      abcAnalysis
+    );
+
+    // NOVO: Calcular ABC distribution para snapshot
+    const abcDistribution: { [key: string]: number } = {
+      'A': 0,
+      'B': 0,
+      'C': 0,
+      'D': 0
+    };
+
+    Object.values(abcAnalysis).forEach(sku => {
+      abcDistribution[sku.class] = (abcDistribution[sku.class] || 0) + 1;
+    });
+
+    const totalSkusForABC = Object.keys(abcAnalysis).length;
+    Object.keys(abcDistribution).forEach(cls => {
+      abcDistribution[cls] = abcDistribution[cls] / totalSkusForABC;
+    });
+
+    // NOVO: Calcular SLA estimate
+    const targetSLA = 15;
+    const slaEstimate = calculateSLAEstimate(
+      abcAnalysis,
+      affinityPairsEnhanced,
+      normalizedData,
+      targetSLA
+    );
 
     // Identify misplaced SKUs
     const misplacedSKUs = Object.entries(abcAnalysis)
@@ -754,6 +1140,30 @@ serve(async (req) => {
       .single();
 
     if (runError) throw runError;
+
+    // NOVO: Criar analytics snapshot
+    const { data: snapshotData, error: snapshotError } = await supabase
+      .from('analytics_snapshots')
+      .insert({
+        warehouse_id: warehouseId,
+        optimization_run_id: optimizationRun.id,
+        abc_distribution: abcDistribution,
+        top_affinity_pairs: affinityPairsEnhanced,
+        avg_distance_per_order_m: avgDistance,
+        target_sla_reduction_pct: targetSLA,
+        estimated_distance_reduction_pct: slaEstimate.estimated_distance_reduction_pct,
+        estimated_time_saved_pct: slaEstimate.estimated_time_saved_pct,
+        method_notes: methodNotes,
+        order_distance_samples: samples
+      })
+      .select()
+      .single();
+
+    if (snapshotError) {
+      console.error('❌ Error creating analytics snapshot:', snapshotError);
+    } else {
+      console.log('✅ Analytics snapshot created:', snapshotData.id);
+    }
 
     // Insert recommendations
     const recommendationInserts = geminiResponse.recommendations

@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_snapshots: {
+        Row: {
+          abc_distribution: Json
+          avg_distance_per_order_m: number | null
+          created_at: string
+          estimated_distance_reduction_pct: number | null
+          estimated_time_saved_pct: number | null
+          generated_at: string
+          id: string
+          method_notes: Json
+          optimization_run_id: string | null
+          order_distance_samples: Json | null
+          target_sla_reduction_pct: number | null
+          top_affinity_pairs: Json
+          warehouse_id: string
+        }
+        Insert: {
+          abc_distribution?: Json
+          avg_distance_per_order_m?: number | null
+          created_at?: string
+          estimated_distance_reduction_pct?: number | null
+          estimated_time_saved_pct?: number | null
+          generated_at?: string
+          id?: string
+          method_notes?: Json
+          optimization_run_id?: string | null
+          order_distance_samples?: Json | null
+          target_sla_reduction_pct?: number | null
+          top_affinity_pairs?: Json
+          warehouse_id: string
+        }
+        Update: {
+          abc_distribution?: Json
+          avg_distance_per_order_m?: number | null
+          created_at?: string
+          estimated_distance_reduction_pct?: number | null
+          estimated_time_saved_pct?: number | null
+          generated_at?: string
+          id?: string
+          method_notes?: Json
+          optimization_run_id?: string | null
+          order_distance_samples?: Json | null
+          target_sla_reduction_pct?: number | null
+          top_affinity_pairs?: Json
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_snapshots_optimization_run_id_fkey"
+            columns: ["optimization_run_id"]
+            isOneToOne: false
+            referencedRelation: "optimization_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_snapshots_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       optimization_runs: {
         Row: {
           analysis_end_date: string | null
