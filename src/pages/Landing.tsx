@@ -97,8 +97,8 @@ export default function Landing() {
             
             <p className="text-xl text-neutral-600 max-w-2xl" style={{ textShadow: '0 1px 2px rgba(255,255,255,0.8)' }}>
               Reorganize SKUs com base em dados reais<br />
-              utilizando recomendações inteligentes: análise ABC, afinidade de produtos<br />
-              e otimização de rotas em um só lugar.
+              utilizando recomendações inteligentes: análise ABC,<br />
+              afinidade de produtos e otimização de rotas em um só lugar.
             </p>
             
             <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
