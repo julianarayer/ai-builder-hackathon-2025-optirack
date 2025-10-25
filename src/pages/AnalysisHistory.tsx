@@ -90,7 +90,8 @@ export default function AnalysisHistory() {
       <div className="min-h-screen flex w-full bg-gradient-to-br from-neutral-50 via-primary-50 to-neutral-100">
         <AppSidebar />
         <div className="flex-1 overflow-auto p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+          <div className="h-[72px]" />
+          <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -155,7 +156,7 @@ export default function AnalysisHistory() {
           monthName={monthName}
           isLoading={isLoading}
         />
-      </div>
+          </div>
         </div>
       </div>
     </SidebarProvider>

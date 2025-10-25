@@ -232,11 +232,17 @@ export default function Dashboard() {
       <div className="min-h-screen flex w-full bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
         <AppSidebar />
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-neutral-200/50">
-        <div className="container mx-auto px-6 py-4">
+      <header 
+        className="fixed top-0 right-0 z-40 bg-white/80 backdrop-blur-lg border-b border-neutral-200/50 transition-all duration-300"
+        style={{ left: 'var(--sidebar-width)' }}
+      >
+        <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
+            <div 
+              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" 
+              onClick={() => navigate('/dashboard')}
+            >
               <img src={optirackLogo} alt="OptiRack" className="h-8 w-8" />
               <span className="text-lg font-medium text-neutral-900">OptiRack</span>
             </div>
