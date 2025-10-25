@@ -22,6 +22,10 @@ export interface AnalyticsSnapshot {
     path_heuristic: string;
     min_pair_support: number;
     fallback_sem_layout: boolean;
+    distance_mode?: 'profile_informed_no_layout' | 'layout_based' | 'ordinal_fallback';
+    N_aisles?: number;
+    aisle_width_m?: number;
+    aisle_length_m?: number;
   };
   order_distance_samples?: any[];
   generated_at: string;

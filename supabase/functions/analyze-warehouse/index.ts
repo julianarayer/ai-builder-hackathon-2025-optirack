@@ -72,6 +72,10 @@ interface AnalyticsSnapshot {
     path_heuristic: string;
     min_pair_support: number;
     fallback_sem_layout: boolean;
+    distance_mode?: string;
+    N_aisles?: number;
+    aisle_width_m?: number;
+    aisle_length_m?: number;
   };
   order_distance_samples?: OrderDistanceSample[];
 }
@@ -419,11 +423,13 @@ function performAffinityAnalysisEnhanced(
   return affinityPairs.slice(0, 20); // Top 20
 }
 
-// Calculate average distance per order
-function calculateAvgDistancePerOrder(
+// Calculate average distance per order with warehouse profile geometry
+function calculateAvgDistanceWithProfile(
   data: CSVRow[],
+  warehouseProfile: any | null,
   layoutPlan: any | null,
-  abcAnalysis: ABCAnalysis
+  abcAnalysis: ABCAnalysis,
+  affinityPairs: AffinityPairEnhanced[]
 ): {
   avgDistance: number;
   samples: OrderDistanceSample[];
@@ -431,6 +437,10 @@ function calculateAvgDistancePerOrder(
     distance_metric: string;
     path_heuristic: string;
     fallback_sem_layout: boolean;
+    distance_mode: string;
+    N_aisles?: number;
+    aisle_width_m?: number;
+    aisle_length_m?: number;
   };
 } {
   const orderGroups: { [orderId: string]: string[] } = {};
@@ -443,59 +453,40 @@ function calculateAvgDistancePerOrder(
   });
 
   const orderIds = Object.keys(orderGroups);
-  const distances: number[] = [];
-  const samples: OrderDistanceSample[] = [];
   
-  let useFallback = !layoutPlan || !layoutPlan.shapes || layoutPlan.shapes.length === 0;
+  // Check what data is available
+  const hasLayout = layoutPlan && layoutPlan.shapes && layoutPlan.shapes.length > 0;
+  const hasProfile = warehouseProfile && 
+                     warehouseProfile.total_area_sqm && 
+                     warehouseProfile.total_area_sqm > 0;
   
-  if (useFallback) {
-    // FALLBACK: Usar posição ordinal baseada em ABC
-    console.log('📍 Layout não disponível. Usando fallback ordinal por ABC.');
-    
-    orderIds.forEach((orderId, idx) => {
-      const skus = orderGroups[orderId];
-      let totalDistance = 0;
-      
-      skus.forEach(sku => {
-        const abcClass = abcAnalysis[sku]?.class || 'C';
-        let estimatedDistance = 0;
-        
-        switch (abcClass) {
-          case 'A': estimatedDistance = 10; break;
-          case 'B': estimatedDistance = 30; break;
-          case 'C': estimatedDistance = 50; break;
-          case 'D': estimatedDistance = 70; break;
-        }
-        
-        totalDistance += estimatedDistance * 2;
-      });
-      
-      distances.push(totalDistance);
-      
-      if (idx < 50) {
-        samples.push({
-          order_id: orderId,
-          items_count: skus.length,
-          sku_codes: skus,
-          distance_m: totalDistance,
-          route_points: [`ABC-based: ${skus.map(s => abcAnalysis[s]?.class || '?').join(',')}`]
-        });
-      }
-    });
-    
-    return {
-      avgDistance: distances.reduce((a, b) => a + b, 0) / distances.length,
-      samples,
-      methodNotes: {
-        distance_metric: 'ordinal',
-        path_heuristic: 'ordinal_fallback',
-        fallback_sem_layout: true
-      }
-    };
+  // CASO 1: Layout real disponível
+  if (hasLayout) {
+    console.log('📍 Using layout-based distance calculation');
+    return calculateWithLayout(orderGroups, orderIds, data, layoutPlan, abcAnalysis);
   }
   
-  // COM LAYOUT: Usar coordenadas simplificadas
-  console.log('📍 Layout disponível. Calculando distância Manhattan.');
+  // CASO 2: Warehouse profile disponível (SEM layout)
+  if (hasProfile) {
+    console.log('📍 Using profile-informed distance calculation (no layout)');
+    return calculateWithProfileGeometry(orderGroups, orderIds, data, warehouseProfile, abcAnalysis, affinityPairs);
+  }
+  
+  // CASO 3: Fallback ordinal simples
+  console.log('📍 Using ordinal fallback (no layout, no profile)');
+  return calculateWithOrdinalFallback(orderGroups, orderIds, data, abcAnalysis);
+}
+
+// Helper: Calculate with layout
+function calculateWithLayout(
+  orderGroups: any,
+  orderIds: string[],
+  data: CSVRow[],
+  layoutPlan: any,
+  abcAnalysis: ABCAnalysis
+) {
+  const distances: number[] = [];
+  const samples: OrderDistanceSample[] = [];
   
   const skuCoordinates: { [sku: string]: { x: number; y: number } } = {};
   
@@ -523,8 +514,8 @@ function calculateAvgDistancePerOrder(
     const points = [packingPoint];
     
     const skuPoints = skus
-      .map(sku => skuCoordinates[sku] || packingPoint)
-      .sort((a, b) => a.x - b.x || a.y - b.y);
+      .map((sku: string) => skuCoordinates[sku] || packingPoint)
+      .sort((a: any, b: any) => a.x - b.x || a.y - b.y);
     
     points.push(...skuPoints);
     points.push(packingPoint);
@@ -555,7 +546,228 @@ function calculateAvgDistancePerOrder(
     methodNotes: {
       distance_metric: 'manhattan',
       path_heuristic: 's-shape',
-      fallback_sem_layout: false
+      fallback_sem_layout: false,
+      distance_mode: 'layout_based'
+    }
+  };
+}
+
+// Helper: Calculate with profile geometry (NO layout)
+function calculateWithProfileGeometry(
+  orderGroups: any,
+  orderIds: string[],
+  data: CSVRow[],
+  profile: any,
+  abcAnalysis: ABCAnalysis,
+  affinityPairs: AffinityPairEnhanced[]
+) {
+  const distances: number[] = [];
+  const samples: OrderDistanceSample[] = [];
+  
+  // 1. Determinar largura de corredor efetiva
+  let W = 1.8; // fallback padrão
+  
+  if (profile.zones && Array.isArray(profile.zones)) {
+    const forkliftZone = profile.zones.find((z: any) => z.type === 'forklift' && z.enabled);
+    const manualZone = profile.zones.find((z: any) => z.type === 'manual' && z.enabled);
+    
+    if (forkliftZone && forkliftZone.min_corridor_width_m) {
+      W = forkliftZone.min_corridor_width_m;
+    } else if (manualZone && manualZone.min_corridor_width_m) {
+      W = manualZone.min_corridor_width_m;
+    }
+  }
+  
+  // 2. Estimar número de corredores
+  const areaSqm = profile.total_area_sqm || 1000;
+  const rawN = Math.sqrt(areaSqm) / (2 * W);
+  const N = Math.max(3, Math.min(12, Math.round(rawN)));
+  
+  // 3. Calcular dimensões do retângulo
+  const totalWidth = N * W;
+  const L = areaSqm / totalWidth;
+  
+  console.log(`📐 Geometry: ${N} aisles, ${W}m width, ${L.toFixed(1)}m length`);
+  
+  // 4. Atribuir SKUs a corredores por classe ABC
+  const skuAislePosition: { [sku: string]: { aisle: number; y: number } } = {};
+  
+  // Agrupar SKUs por classe
+  const skusByClass: { [cls: string]: string[] } = { A: [], B: [], C: [], D: [] };
+  Object.entries(abcAnalysis).forEach(([sku, info]) => {
+    skusByClass[info.class].push(sku);
+  });
+  
+  // Ordenar SKUs dentro de cada classe por frequência (desc)
+  ['A', 'B', 'C', 'D'].forEach(cls => {
+    skusByClass[cls].sort((a, b) => {
+      const freqA = abcAnalysis[a]?.picks || 0;
+      const freqB = abcAnalysis[b]?.picks || 0;
+      return freqB - freqA;
+    });
+  });
+  
+  // Distribuir pelos corredores
+  let currentAisle = 0;
+  const aisleCapacity = Math.ceil(Object.keys(abcAnalysis).length / N);
+  
+  ['A', 'B', 'C', 'D'].forEach(cls => {
+    const skusInClass = skusByClass[cls];
+    skusInClass.forEach((sku, idx) => {
+      if (idx > 0 && idx % aisleCapacity === 0) {
+        currentAisle++;
+      }
+      if (currentAisle >= N) currentAisle = N - 1;
+      
+      // Posição Y proporcional à frequência dentro do corredor
+      const normalizedPosition = idx / Math.max(1, skusInClass.length - 1);
+      const y = normalizedPosition * L;
+      
+      skuAislePosition[sku] = { aisle: currentAisle, y };
+    });
+  });
+  
+  // 5. Aplicar ajuste de co-ocorrência (aproximar pares de alta afinidade)
+  const affinityMap = new Map<string, string[]>();
+  affinityPairs.filter(p => p.lift >= 1.5).forEach(pair => {
+    if (!affinityMap.has(pair.sku_i)) affinityMap.set(pair.sku_i, []);
+    if (!affinityMap.has(pair.sku_j)) affinityMap.set(pair.sku_j, []);
+    affinityMap.get(pair.sku_i)!.push(pair.sku_j);
+    affinityMap.get(pair.sku_j)!.push(pair.sku_i);
+  });
+  
+  affinityMap.forEach((relatedSkus, sku) => {
+    const skuPos = skuAislePosition[sku];
+    if (!skuPos) return;
+    
+    relatedSkus.forEach(relatedSku => {
+      const relatedPos = skuAislePosition[relatedSku];
+      if (!relatedPos || relatedPos.aisle !== skuPos.aisle) return;
+      
+      // Reduzir distância Y em 25%
+      const avgY = (skuPos.y + relatedPos.y) / 2;
+      skuPos.y = skuPos.y * 0.75 + avgY * 0.25;
+    });
+  });
+  
+  // 6. Calcular distância por pedido (serpentina)
+  const packingPoint = { x: 0, y: 0 };
+  
+  orderIds.forEach((orderId, idx) => {
+    const skus = orderGroups[orderId];
+    
+    // Agrupar por corredor
+    const aisleGroups: { [aisle: number]: number[] } = {};
+    skus.forEach((sku: string) => {
+      const pos = skuAislePosition[sku];
+      if (pos) {
+        if (!aisleGroups[pos.aisle]) aisleGroups[pos.aisle] = [];
+        aisleGroups[pos.aisle].push(pos.y);
+      }
+    });
+    
+    // Ordenar corredores por proximidade
+    const aisles = Object.keys(aisleGroups).map(Number).sort((a, b) => a - b);
+    
+    let totalDistance = 0;
+    let currentX = 0;
+    let currentY = 0;
+    
+    aisles.forEach((aisle, aisleIdx) => {
+      const aisleX = aisle * W;
+      const yPositions = aisleGroups[aisle].sort((a, b) => a - b);
+      
+      // Ir até a entrada do corredor
+      totalDistance += Math.abs(aisleX - currentX) + Math.abs(yPositions[0] - currentY);
+      
+      // Percorrer o corredor até o ponto mais distante
+      const maxY = Math.max(...yPositions);
+      totalDistance += Math.abs(maxY - yPositions[0]);
+      
+      currentX = aisleX;
+      currentY = maxY;
+    });
+    
+    // Voltar ao packing
+    totalDistance += Math.abs(currentX - packingPoint.x) + Math.abs(currentY - packingPoint.y);
+    
+    distances.push(totalDistance);
+    
+    if (idx < 50) {
+      samples.push({
+        order_id: orderId,
+        items_count: skus.length,
+        sku_codes: skus,
+        distance_m: totalDistance,
+        route_points: [`Aisles visited: ${aisles.join(',')}`]
+      });
+    }
+  });
+  
+  return {
+    avgDistance: distances.reduce((a, b) => a + b, 0) / distances.length,
+    samples,
+    methodNotes: {
+      distance_metric: 'manhattan',
+      path_heuristic: 's-shape',
+      fallback_sem_layout: true,
+      distance_mode: 'profile_informed_no_layout',
+      N_aisles: N,
+      aisle_width_m: W,
+      aisle_length_m: parseFloat(L.toFixed(1))
+    }
+  };
+}
+
+// Helper: Ordinal fallback (NO layout, NO profile)
+function calculateWithOrdinalFallback(
+  orderGroups: any,
+  orderIds: string[],
+  data: CSVRow[],
+  abcAnalysis: ABCAnalysis
+) {
+  const distances: number[] = [];
+  const samples: OrderDistanceSample[] = [];
+  
+  orderIds.forEach((orderId, idx) => {
+    const skus = orderGroups[orderId];
+    let totalDistance = 0;
+    
+    skus.forEach((sku: string) => {
+      const abcClass = abcAnalysis[sku]?.class || 'C';
+      let estimatedDistance = 0;
+      
+      switch (abcClass) {
+        case 'A': estimatedDistance = 10; break;
+        case 'B': estimatedDistance = 30; break;
+        case 'C': estimatedDistance = 50; break;
+        case 'D': estimatedDistance = 70; break;
+      }
+      
+      totalDistance += estimatedDistance * 2;
+    });
+    
+    distances.push(totalDistance);
+    
+    if (idx < 50) {
+      samples.push({
+        order_id: orderId,
+        items_count: skus.length,
+        sku_codes: skus,
+        distance_m: totalDistance,
+        route_points: [`ABC-based: ${skus.map((s: string) => abcAnalysis[s]?.class || '?').join(',')}`]
+      });
+    }
+  });
+  
+  return {
+    avgDistance: distances.reduce((a, b) => a + b, 0) / distances.length,
+    samples,
+    methodNotes: {
+      distance_metric: 'ordinal',
+      path_heuristic: 'ordinal_fallback',
+      fallback_sem_layout: true,
+      distance_mode: 'ordinal_fallback'
     }
   };
 }
@@ -938,27 +1150,33 @@ serve(async (req) => {
     // NOVO: Análise aprimorada com Phi
     const affinityPairsEnhanced = performAffinityAnalysisEnhanced(normalizedData, skuNames);
 
-    // NOVO: Buscar layout do warehouse profile
+    // NOVO: Buscar warehouse profile completo
+    let warehouseProfile = null;
     let layoutPlan = null;
     try {
-      const { data: warehouseProfile } = await supabase
+      const { data: profile } = await supabase
         .from('warehouse_profiles')
-        .select('layout_drawing_data')
+        .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (warehouseProfile?.layout_drawing_data) {
-        layoutPlan = warehouseProfile.layout_drawing_data;
+      if (profile) {
+        warehouseProfile = profile;
+        if (profile.layout_drawing_data) {
+          layoutPlan = profile.layout_drawing_data;
+        }
       }
     } catch (err) {
-      console.log('⚠️ Layout não encontrado, usando fallback');
+      console.log('⚠️ Warehouse profile não encontrado, usando fallback');
     }
 
-    // NOVO: Calcular distância média por pedido
-    const { avgDistance, samples, methodNotes } = calculateAvgDistancePerOrder(
+    // NOVO: Calcular distância média por pedido com geometria do profile
+    const { avgDistance, samples, methodNotes } = calculateAvgDistanceWithProfile(
       normalizedData,
+      warehouseProfile,
       layoutPlan,
-      abcAnalysis
+      abcAnalysis,
+      affinityPairsEnhanced
     );
 
     // NOVO: Calcular ABC distribution para snapshot

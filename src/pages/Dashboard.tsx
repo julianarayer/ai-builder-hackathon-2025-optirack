@@ -15,6 +15,7 @@ import { DataPreview } from "@/components/upload/DataPreview";
 import { ColumnMappingModal } from "@/components/upload/ColumnMappingModal";
 import { Progress } from "@/components/ui/progress";
 import { ABCExplanationDialog } from "@/components/ui/abc-explanation-dialog";
+import { DistanceAnalysisCard } from "@/components/analytics/DistanceAnalysisCard";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import {
@@ -59,6 +60,7 @@ export default function Dashboard() {
   const [showABCExplanation, setShowABCExplanation] = useState(false);
   const [affinityPairs, setAffinityPairs] = useState<any[]>([]);
   const [showAffinityExplanation, setShowAffinityExplanation] = useState(false);
+  const [analyticsSnapshot, setAnalyticsSnapshot] = useState<any | null>(null);
 
   useEffect(() => {
     // Check auth state
@@ -214,18 +216,21 @@ export default function Dashboard() {
     const skus = await getTopSKUs(warehouse.id, 10);
     setTopSKUs(skus);
 
-    // Load affinity pairs from analytics snapshot
+    // Load full analytics snapshot
     if (run?.id) {
       const { data: snapshot } = await supabase
         .from('analytics_snapshots')
-        .select('top_affinity_pairs')
+        .select('*')
         .eq('optimization_run_id', run.id)
         .order('generated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
       
-      if (snapshot?.top_affinity_pairs && Array.isArray(snapshot.top_affinity_pairs)) {
-        setAffinityPairs(snapshot.top_affinity_pairs as any[]);
+      if (snapshot) {
+        setAnalyticsSnapshot(snapshot);
+        if (snapshot.top_affinity_pairs && Array.isArray(snapshot.top_affinity_pairs)) {
+          setAffinityPairs(snapshot.top_affinity_pairs as any[]);
+        }
       }
     }
   };
@@ -578,6 +583,11 @@ export default function Dashboard() {
                 )}
               </div>
             </GlassCard>
+
+            {/* Distance Analysis Card */}
+            {analyticsSnapshot && (
+              <DistanceAnalysisCard snapshot={analyticsSnapshot} />
+            )}
           </div>
         )}
 
