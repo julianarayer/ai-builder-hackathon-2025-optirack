@@ -17,6 +17,7 @@ import {
   Warehouse
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import warehouseHero from "@/assets/warehouse-hero.png";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -49,24 +50,40 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
       {/* Hero Section */}
-      <section className="container mx-auto px-4 pt-20 pb-32">
-        <div className="flex flex-col items-center justify-center gap-12 lg:flex-row lg:gap-20">
-          {/* Left: Text Content */}
-          <div className="flex-1 space-y-8 text-center lg:text-left animate-fade-in">
-            <div className="inline-flex items-center gap-2 rounded-full glass-card px-4 py-2">
+      <section 
+        className="relative min-h-[90vh] flex items-center overflow-hidden"
+        style={{
+          backgroundImage: `linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.98) 0%,
+            rgba(255, 255, 255, 0.95) 20%,
+            rgba(255, 255, 255, 0.85) 35%,
+            rgba(255, 255, 255, 0.60) 50%,
+            rgba(255, 255, 255, 0.30) 70%,
+            rgba(255, 255, 255, 0.10) 85%,
+            rgba(255, 255, 255, 0) 100%
+          ), url(${warehouseHero})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <div className="container mx-auto px-4 py-20 relative z-10">
+          <div className="max-w-2xl space-y-8 animate-fade-in">
+            <div className="inline-flex items-center gap-2 rounded-full glass-card px-4 py-2 bg-white/90 backdrop-blur-md">
               <div className="h-2 w-2 rounded-full bg-primary-400 animate-pulse" />
               <span className="text-sm font-medium text-neutral-700">
                 Powered by AI
               </span>
             </div>
             
-            <h1 className="text-5xl font-bold leading-tight lg:text-6xl">
+            <h1 className="text-5xl font-bold leading-tight lg:text-6xl" style={{ textShadow: '0 2px 4px rgba(255,255,255,0.8)' }}>
               <span className="gradient-text">Otimize Seu Armazém</span>
               <br />
               <span className="text-neutral-900">com Inteligência Artificial</span>
             </h1>
             
-            <p className="text-xl text-neutral-600 max-w-2xl">
+            <p className="text-xl text-neutral-600 max-w-2xl" style={{ textShadow: '0 1px 2px rgba(255,255,255,0.8)' }}>
               Reduza até 40% do tempo de picking com recomendações inteligentes de slotting. 
               Análise ABC, afinidade de produtos e otimização de rotas em um só lugar.
             </p>
@@ -80,18 +97,10 @@ export default function Landing() {
                 Começar Gratuitamente
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" className="bg-white/80 backdrop-blur-sm">
                 Ver Demonstração
               </Button>
             </div>
-          </div>
-
-          {/* Right: Illustration */}
-          <div className="flex-1 flex items-center justify-center animate-fade-in">
-            <GlassCard hover className="p-12 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-200/20 to-primary-400/20" />
-              <Warehouse className="h-48 w-48 text-primary-400 relative z-10" strokeWidth={1.5} />
-            </GlassCard>
           </div>
         </div>
       </section>
