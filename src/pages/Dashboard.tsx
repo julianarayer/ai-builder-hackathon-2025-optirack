@@ -14,6 +14,7 @@ import { FileUploader } from "@/components/upload/FileUploader";
 import { DataPreview } from "@/components/upload/DataPreview";
 import { ColumnMappingModal } from "@/components/upload/ColumnMappingModal";
 import { Progress } from "@/components/ui/progress";
+import { ABCExplanationDialog } from "@/components/ui/abc-explanation-dialog";
 import {
   Package,
   Clock,
@@ -25,6 +26,7 @@ import {
   Warehouse,
   User as UserIcon,
   History,
+  Info as InfoIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import optirackLogo from "@/assets/optirack-logo.png";
@@ -52,6 +54,7 @@ export default function Dashboard() {
   const [columnMapping, setColumnMapping] = useState<any>(null);
   const [showMappingModal, setShowMappingModal] = useState(false);
   const [pendingMappingData, setPendingMappingData] = useState<any>(null);
+  const [showABCExplanation, setShowABCExplanation] = useState(false);
 
   useEffect(() => {
     // Check auth state
@@ -346,9 +349,18 @@ export default function Dashboard() {
         {latestRun && (
           <div className="grid gap-6 md:grid-cols-2">
             <GlassCard className="space-y-4">
-              <h3 className="text-lg font-semibold text-neutral-900">
-                Distribuição ABC
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-neutral-900">
+                  Distribuição ABC
+                </h3>
+                <button
+                  onClick={() => setShowABCExplanation(true)}
+                  className="text-xs font-light text-pink-500 hover:text-pink-600 transition-colors flex items-center gap-1"
+                >
+                  O que é isso?
+                  <InfoIcon className="h-3 w-3" />
+                </button>
+              </div>
               <div className="flex items-center justify-center h-64">
                 {abcDistribution.length > 0 ? (
                   <div className="space-y-3 w-full">
@@ -482,6 +494,12 @@ export default function Dashboard() {
           onCancel={handleCancelMapping}
         />
       )}
+
+      {/* ABC Explanation Dialog */}
+      <ABCExplanationDialog 
+        isOpen={showABCExplanation} 
+        onClose={() => setShowABCExplanation(false)} 
+      />
     </div>
   );
 }
