@@ -293,7 +293,7 @@ export default function Dashboard() {
         </div>
 
         {/* KPI Metrics */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div onClick={() => latestRun && navigate('/skus')} className={latestRun ? 'cursor-pointer' : ''}>
             <MetricCard
               icon={Package}
