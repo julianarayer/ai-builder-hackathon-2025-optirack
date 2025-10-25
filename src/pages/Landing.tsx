@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import warehouseHero from "@/assets/warehouse-hero.png";
+import optirackLogo from "@/assets/optirack-logo.png";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -214,7 +215,7 @@ export default function Landing() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Warehouse className="h-6 w-6 text-primary-400" />
+              <img src={optirackLogo} alt="OptiRack Logo" className="h-8 w-8 object-contain" />
               <span className="font-semibold text-neutral-900">OptiRack AI</span>
             </div>
             <p className="text-sm text-neutral-600">

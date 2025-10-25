@@ -10,6 +10,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Warehouse, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import optirackLogo from "@/assets/optirack-logo.png";
 import { toast } from "sonner";
 
 type AuthMode = 'login' | 'signup';
@@ -125,7 +126,7 @@ export default function Login() {
         <div className="text-center space-y-4">
           <div className="flex justify-center">
             <div className="glass-card p-4 rounded-3xl">
-              <Warehouse className="h-12 w-12 text-primary-400" strokeWidth={1.5} />
+              <img src={optirackLogo} alt="OptiRack Logo" className="h-16 w-16 object-contain" />
             </div>
           </div>
           <div>

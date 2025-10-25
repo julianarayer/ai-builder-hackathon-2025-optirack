@@ -25,6 +25,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import optirackLogo from "@/assets/optirack-logo.png";
 import type { User } from "@supabase/supabase-js";
 import { 
   processWarehouseData, 
@@ -179,8 +180,8 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-100">
-                <Warehouse className="h-6 w-6 text-primary-400" strokeWidth={1.5} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80">
+                <img src={optirackLogo} alt="OptiRack Logo" className="h-8 w-8 object-contain" />
               </div>
               <h1 className="text-xl font-bold gradient-text">OptiRack AI</h1>
             </div>
