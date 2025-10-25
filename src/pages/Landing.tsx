@@ -117,7 +117,14 @@ export default function Landing() {
       </section>
 
       {/* Benefits Section */}
-      <section className="container mx-auto px-4 py-20">
+      <section className="relative container mx-auto px-4 py-20">
+        {/* Gradient overlay for smooth transition */}
+        <div 
+          className="absolute inset-x-0 top-0 h-32 -mt-20 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%)'
+          }}
+        />
         <div className="grid gap-8 md:grid-cols-3">
           {benefits.map((benefit, index) => (
             <GlassCard 
