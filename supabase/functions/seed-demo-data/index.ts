@@ -224,6 +224,108 @@ Deno.serve(async (req) => {
 
     console.log(`Created ${slotCount} slot capacity records`)
 
+    // Create product affinity pairs
+    let affinityCount = 0
+    const skusByClass = {
+      A: existingSKUs.filter(s => s.velocity_class === 'A'),
+      B: existingSKUs.filter(s => s.velocity_class === 'B'),
+      C: existingSKUs.filter(s => s.velocity_class === 'C'),
+      D: existingSKUs.filter(s => s.velocity_class === 'D'),
+    }
+
+    // Create affinity pairs within same class (high affinity)
+    for (const velocityClass of ['A', 'B', 'C'] as const) {
+      const skusInClass = skusByClass[velocityClass] || []
+      
+      for (let i = 0; i < skusInClass.length && i < 5; i++) {
+        for (let j = i + 1; j < skusInClass.length && j < 5; j++) {
+          const skuA = skusInClass[i]
+          const skuB = skusInClass[j]
+          
+          // High affinity for same class
+          const coOccurrence = Math.floor(30 + Math.random() * 40)
+          const totalOrders = 150
+          const ordersWithA = Math.floor(50 + Math.random() * 30)
+          const ordersWithB = Math.floor(45 + Math.random() * 30)
+          
+          const support = coOccurrence / totalOrders
+          const confidence = coOccurrence / ordersWithA
+          const expectedCoOccurrence = (ordersWithA * ordersWithB) / totalOrders
+          const lift = coOccurrence / expectedCoOccurrence
+
+          const { error: affinityError } = await supabaseClient
+            .from('product_affinity')
+            .upsert({
+              warehouse_id: warehouseId,
+              sku_a_id: skuA.id,
+              sku_b_id: skuB.id,
+              co_occurrence_count: coOccurrence,
+              support: support,
+              confidence: confidence,
+              lift: lift,
+              total_orders: totalOrders,
+              total_orders_with_a: ordersWithA,
+              total_orders_with_b: ordersWithB,
+              current_distance_m: Math.random() > 0.5 ? 25 + Math.random() * 40 : null,
+              recommended_action: lift > 2.0 ? 'Aproximar estes produtos para reduzir distância de picking' : null
+            }, { onConflict: 'warehouse_id,sku_a_id,sku_b_id' })
+
+          if (!affinityError) affinityCount++
+        }
+      }
+    }
+
+    // Create some cross-class affinity pairs (medium affinity)
+    const classAPairs: Array<{ from: 'A' | 'B' | 'C' | 'D', to: 'A' | 'B' | 'C' | 'D', count: number }> = [
+      { from: 'A', to: 'B', count: 3 },
+      { from: 'A', to: 'C', count: 2 },
+      { from: 'B', to: 'C', count: 2 },
+    ]
+
+    for (const pair of classAPairs) {
+      const fromSkus = skusByClass[pair.from] || []
+      const toSkus = skusByClass[pair.to] || []
+
+      for (let i = 0; i < Math.min(pair.count, fromSkus.length); i++) {
+        const toIdx = Math.floor(Math.random() * toSkus.length)
+        if (toIdx < toSkus.length) {
+          const skuA = fromSkus[i]
+          const skuB = toSkus[toIdx]
+
+          const coOccurrence = Math.floor(15 + Math.random() * 25)
+          const totalOrders = 150
+          const ordersWithA = Math.floor(40 + Math.random() * 25)
+          const ordersWithB = Math.floor(35 + Math.random() * 25)
+          
+          const support = coOccurrence / totalOrders
+          const confidence = coOccurrence / ordersWithA
+          const expectedCoOccurrence = (ordersWithA * ordersWithB) / totalOrders
+          const lift = coOccurrence / expectedCoOccurrence
+
+          const { error: affinityError } = await supabaseClient
+            .from('product_affinity')
+            .upsert({
+              warehouse_id: warehouseId,
+              sku_a_id: skuA.id,
+              sku_b_id: skuB.id,
+              co_occurrence_count: coOccurrence,
+              support: support,
+              confidence: confidence,
+              lift: lift,
+              total_orders: totalOrders,
+              total_orders_with_a: ordersWithA,
+              total_orders_with_b: ordersWithB,
+              current_distance_m: Math.random() > 0.5 ? 30 + Math.random() * 50 : null,
+              recommended_action: lift > 1.8 ? 'Considerar aproximar estes produtos' : null
+            }, { onConflict: 'warehouse_id,sku_a_id,sku_b_id' })
+
+          if (!affinityError) affinityCount++
+        }
+      }
+    }
+
+    console.log(`Created ${affinityCount} product affinity pairs`)
+
     // Create tasks for critical SKUs
     let taskCount = 0
     for (const critical of criticalSKUs.slice(0, 3)) { // Max 3 critical tasks
@@ -250,6 +352,7 @@ Deno.serve(async (req) => {
         stats: {
           skus_processed: existingSKUs.length,
           inventory_records: inventoryCount,
+          affinity_pairs: affinityCount,
           slots_created: slotCount,
           critical_tasks: taskCount,
         }
