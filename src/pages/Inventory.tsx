@@ -159,7 +159,7 @@ export default function Inventory() {
         <div className="flex-1 flex flex-col p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-medium text-neutral-900">Estoque (light)</h1>
+              <h1 className="text-3xl font-medium text-neutral-900">Estoque</h1>
               <p className="text-neutral-600 mt-1">
                 Supervisão enxuta e decisões de reabastecimento
               </p>
