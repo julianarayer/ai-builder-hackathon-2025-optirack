@@ -6,7 +6,8 @@ export async function seedDemoData(): Promise<void> {
   });
 
   if (error) {
-    throw error;
+    console.error('Erro ao criar dados demo:', error);
+    throw new Error(error.message || 'Falha ao criar dados de demonstração');
   }
 
   return data;
