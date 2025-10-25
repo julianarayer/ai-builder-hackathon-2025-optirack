@@ -363,13 +363,94 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center justify-center h-64">
                 {abcDistribution.length > 0 ? (
-                  <div className="space-y-3 w-full">
-                    {abcDistribution.map(item => (
-                      <div key={item.velocity_class} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Classe {item.velocity_class}</span>
-                        <span className="text-sm text-neutral-600">{item.sku_count} SKUs ({item.percentage?.toFixed(1)}%)</span>
-                      </div>
-                    ))}
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-64 h-64">
+                      <svg viewBox="0 0 200 200" className="w-full h-full">
+                        {(() => {
+                          const colors = {
+                            A: 'hsl(330, 81%, 60%)',
+                            B: 'hsl(217, 91%, 60%)',
+                            C: 'hsl(45, 93%, 58%)',
+                            D: 'hsl(215, 16%, 47%)'
+                          };
+                          
+                          let currentAngle = -90;
+                          
+                          return abcDistribution.map((item, index) => {
+                            const percentage = item.percentage || 0;
+                            const angle = (percentage / 100) * 360;
+                            const startAngle = currentAngle;
+                            const endAngle = currentAngle + angle;
+                            
+                            const startRad = (startAngle * Math.PI) / 180;
+                            const endRad = (endAngle * Math.PI) / 180;
+                            
+                            const x1 = 100 + 80 * Math.cos(startRad);
+                            const y1 = 100 + 80 * Math.sin(startRad);
+                            const x2 = 100 + 80 * Math.cos(endRad);
+                            const y2 = 100 + 80 * Math.sin(endRad);
+                            
+                            const largeArc = angle > 180 ? 1 : 0;
+                            
+                            const path = `M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`;
+                            
+                            const midAngle = startAngle + angle / 2;
+                            const midRad = (midAngle * Math.PI) / 180;
+                            const labelX = 100 + 60 * Math.cos(midRad);
+                            const labelY = 100 + 60 * Math.sin(midRad);
+                            
+                            currentAngle = endAngle;
+                            
+                            return (
+                              <g key={item.velocity_class}>
+                                <path
+                                  d={path}
+                                  fill={colors[item.velocity_class as keyof typeof colors]}
+                                  className="transition-opacity hover:opacity-80 cursor-pointer"
+                                />
+                                <text
+                                  x={labelX}
+                                  y={labelY}
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                  className="text-[10px] font-bold fill-white"
+                                  style={{ pointerEvents: 'none' }}
+                                >
+                                  {item.velocity_class}
+                                </text>
+                                <text
+                                  x={labelX}
+                                  y={labelY + 10}
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                  className="text-[8px] font-medium fill-white"
+                                  style={{ pointerEvents: 'none' }}
+                                >
+                                  {percentage.toFixed(0)}%
+                                </text>
+                              </g>
+                            );
+                          });
+                        })()}
+                      </svg>
+                    </div>
+                    <div className="ml-6 space-y-2">
+                      {abcDistribution.map(item => {
+                        const colors = {
+                          A: 'bg-pink-500',
+                          B: 'bg-blue-500',
+                          C: 'bg-yellow-500',
+                          D: 'bg-gray-500'
+                        };
+                        return (
+                          <div key={item.velocity_class} className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${colors[item.velocity_class as keyof typeof colors]}`} />
+                            <span className="text-sm font-medium">Classe {item.velocity_class}</span>
+                            <span className="text-xs text-neutral-600">({item.sku_count} SKUs)</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center space-y-2">
