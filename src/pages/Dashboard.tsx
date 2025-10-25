@@ -18,6 +18,7 @@ import { ABCExplanationDialog } from "@/components/ui/abc-explanation-dialog";
 import { DistanceAnalysisCard } from "@/components/analytics/DistanceAnalysisCard";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { ImpactSection } from "@/components/dashboard/ImpactSection";
 import {
   Package,
   Clock,
@@ -386,6 +387,9 @@ export default function Dashboard() {
             </div>
           </GlassCard>
         )}
+
+        {/* Impact Section */}
+        {latestRun && <ImpactSection latestRun={latestRun} />}
 
         {/* Quick Stats */}
         {latestRun && (

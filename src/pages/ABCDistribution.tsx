@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { WarehouseHeatmap } from "@/components/abc/WarehouseHeatmap";
 import { TrendingUp, Package, Box, Archive, Boxes, Sparkles, MapPin, ArrowRight, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 
@@ -334,6 +335,9 @@ const ABCDistribution = () => {
                 </div>
               </div>
             </GlassCard>
+
+            {/* Warehouse Heatmap */}
+            <WarehouseHeatmap activeClass={activeClass} />
 
             {/* SKUs Table */}
             <GlassCard>

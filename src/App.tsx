@@ -13,6 +13,7 @@ import AnalysisDetails from "./pages/AnalysisDetails";
 import ABCDistribution from "./pages/ABCDistribution";
 import Inventory from "./pages/Inventory";
 import Profile from "./pages/Profile";
+import Affinity from "./pages/Affinity";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/historico" element={<AnalysisHistory />} />
           <Route path="/historico/:analysisId" element={<AnalysisDetails />} />
           <Route path="/distribuicao-abc" element={<ABCDistribution />} />
+          <Route path="/afinidade" element={<Affinity />} />
           <Route path="/estoque" element={<Inventory />} />
           <Route path="/perfil" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

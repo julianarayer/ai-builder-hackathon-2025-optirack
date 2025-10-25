@@ -185,7 +185,24 @@ const Onboarding = () => {
       return;
     }
 
-    toast.success('Configuração concluída com sucesso!');
+    toast.success('Configuração concluída! Criando dados de exemplo...');
+    
+    // Auto-seed demo data after onboarding
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-demo-data', {
+        method: 'POST',
+      });
+      
+      if (error) {
+        console.error('Seed error:', error);
+        toast.error('Erro ao criar dados de exemplo');
+      } else {
+        toast.success('🎉 Dados de exemplo criados! Redirecionando para o dashboard...');
+      }
+    } catch (error) {
+      console.error('Seed failed:', error);
+    }
+    
     navigate('/dashboard');
   };
 

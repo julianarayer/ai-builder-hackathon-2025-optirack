@@ -326,6 +326,119 @@ Deno.serve(async (req) => {
 
     console.log(`Created ${affinityCount} product affinity pairs`)
 
+    // Create realistic order history (last 90 days)
+    console.log('Creating order history...')
+    let orderCount = 0
+    let orderItemCount = 0
+    
+    const ordersToCreate = 200 + Math.floor(Math.random() * 100) // 200-300 orders
+    const today = new Date()
+    
+    for (let i = 0; i < ordersToCreate; i++) {
+      // Random date in last 90 days
+      const daysAgo = Math.floor(Math.random() * 90)
+      const orderDate = new Date(today)
+      orderDate.setDate(orderDate.getDate() - daysAgo)
+      
+      // Create order
+      const { data: order, error: orderError } = await supabaseClient
+        .from('orders')
+        .insert({
+          warehouse_id: warehouseId,
+          order_code: `ORD-${String(i + 1).padStart(6, '0')}`,
+          order_date: orderDate.toISOString().split('T')[0],
+          total_items: 0, // Will update after items
+          total_picks: 0,
+          picking_time_minutes: null,
+          total_distance_traveled_m: null,
+        })
+        .select()
+        .single()
+      
+      if (orderError || !order) continue
+      orderCount++
+      
+      // Determine number of items per order (4-10 items)
+      const numItems = 4 + Math.floor(Math.random() * 7)
+      const orderItems = []
+      const usedSkuIds = new Set()
+      
+      // Select SKUs based on velocity distribution
+      for (let j = 0; j < numItems; j++) {
+        let selectedSku = null
+        const rand = Math.random()
+        
+        // 60% chance for A, 25% for B, 12% for C, 3% for D
+        if (rand < 0.60 && skusByClass.A && skusByClass.A.length > 0) {
+          const availableA = skusByClass.A.filter(s => !usedSkuIds.has(s.id))
+          if (availableA.length > 0) {
+            selectedSku = availableA[Math.floor(Math.random() * availableA.length)]
+          }
+        } else if (rand < 0.85 && skusByClass.B && skusByClass.B.length > 0) {
+          const availableB = skusByClass.B.filter(s => !usedSkuIds.has(s.id))
+          if (availableB.length > 0) {
+            selectedSku = availableB[Math.floor(Math.random() * availableB.length)]
+          }
+        } else if (rand < 0.97 && skusByClass.C && skusByClass.C.length > 0) {
+          const availableC = skusByClass.C.filter(s => !usedSkuIds.has(s.id))
+          if (availableC.length > 0) {
+            selectedSku = availableC[Math.floor(Math.random() * availableC.length)]
+          }
+        } else if (skusByClass.D && skusByClass.D.length > 0) {
+          const availableD = skusByClass.D.filter(s => !usedSkuIds.has(s.id))
+          if (availableD.length > 0) {
+            selectedSku = availableD[Math.floor(Math.random() * availableD.length)]
+          }
+        }
+        
+        // Fallback to any SKU if selection failed
+        if (!selectedSku) {
+          const allAvailable = existingSKUs.filter(s => !usedSkuIds.has(s.id))
+          if (allAvailable.length > 0) {
+            selectedSku = allAvailable[Math.floor(Math.random() * allAvailable.length)]
+          }
+        }
+        
+        if (selectedSku) {
+          usedSkuIds.add(selectedSku.id)
+          orderItems.push({
+            order_id: order.id,
+            sku_id: selectedSku.id,
+            quantity: 1 + Math.floor(Math.random() * 3),
+            pick_sequence: j + 1,
+          })
+        }
+      }
+      
+      // Insert order items
+      if (orderItems.length > 0) {
+        const { error: itemsError } = await supabaseClient
+          .from('order_items')
+          .insert(orderItems)
+        
+        if (!itemsError) {
+          orderItemCount += orderItems.length
+          
+          // Calculate realistic metrics
+          const pickingTime = 3 + (orderItems.length * 2) + Math.floor(Math.random() * 5)
+          const distanceTraveled = (15 + (orderItems.length * 8) + Math.floor(Math.random() * 20))
+          
+          // Update order with totals
+          await supabaseClient
+            .from('orders')
+            .update({
+              total_items: orderItems.length,
+              total_picks: orderItems.length,
+              picking_time_minutes: pickingTime,
+              total_distance_traveled_m: distanceTraveled,
+            })
+            .eq('id', order.id)
+        }
+      }
+    }
+    
+    console.log(`Created ${orderCount} orders with ${orderItemCount} items`)
+
     // Create tasks for critical SKUs
     let taskCount = 0
     for (const critical of criticalSKUs.slice(0, 3)) { // Max 3 critical tasks
@@ -345,14 +458,32 @@ Deno.serve(async (req) => {
 
     console.log(`Created ${taskCount} critical tasks`)
 
+    // Trigger warehouse analysis automatically
+    console.log('Triggering automatic warehouse analysis...')
+    try {
+      const analysisResponse = await supabaseClient.functions.invoke('analyze-warehouse', {
+        body: { warehouse_id: warehouseId }
+      })
+      
+      if (analysisResponse.error) {
+        console.error('Auto-analysis failed:', analysisResponse.error)
+      } else {
+        console.log('Auto-analysis completed successfully')
+      }
+    } catch (analysisError) {
+      console.error('Error triggering analysis:', analysisError)
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Dados de inventário criados automaticamente!',
+        message: 'Demo data seeded successfully with automatic analysis',
         stats: {
           skus_processed: existingSKUs.length,
           inventory_records: inventoryCount,
           affinity_pairs: affinityCount,
+          orders_created: orderCount,
+          order_items: orderItemCount,
           slots_created: slotCount,
           critical_tasks: taskCount,
         }

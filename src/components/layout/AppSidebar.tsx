@@ -44,6 +44,11 @@ const menuItems = [
     icon: PieChart,
   },
   {
+    title: "Pares de Afinidade",
+    url: "/afinidade",
+    icon: Package,
+  },
+  {
     title: "Estoque",
     url: "/estoque",
     icon: PackageSearch,
