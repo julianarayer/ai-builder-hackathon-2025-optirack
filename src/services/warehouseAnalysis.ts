@@ -69,6 +69,8 @@ export async function processWarehouseData(
   try {
     onProgress?.({ stage: 'Iniciando análise...', percent: 0 });
 
+    console.log('📤 Calling Edge Function with', data.length, 'rows');
+
     // Call the Edge Function
     const { data: result, error } = await supabase.functions.invoke<AnalysisResult>('analyze-warehouse', {
       body: {
@@ -79,14 +81,23 @@ export async function processWarehouseData(
 
     clearInterval(progressInterval);
 
+    console.log('📥 Edge Function response:', { result, error });
+
     if (error) {
-      console.error('Edge function error:', error);
+      console.error('❌ Edge function error:', error);
       throw new Error(error.message || 'Erro ao processar análise. Tente novamente.');
     }
 
     if (!result || !result.success) {
+      console.error('❌ Result invalid:', result);
       throw new Error(result?.error || 'Erro desconhecido ao processar análise.');
     }
+
+    console.log('✅ Analysis completed successfully:', {
+      runId: result.runId,
+      recommendations: result.summary?.total_recommendations,
+      improvement: result.summary?.estimated_overall_improvement_percent
+    });
 
     onProgress?.({ stage: 'Concluído!', percent: 100 });
 

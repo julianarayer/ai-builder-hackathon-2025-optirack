@@ -331,7 +331,29 @@ async function callGeminiAPI(prompt: string): Promise<GeminiResponse> {
     }
 
     const jsonText = result.candidates[0].content.parts[0].text;
-    return JSON.parse(jsonText);
+    
+    // Try to parse JSON, cleaning common issues
+    let cleaned = jsonText.trim();
+    
+    // Remove markdown code blocks if present
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+    }
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/```\n?/g, '');
+    }
+    
+    // Log for debugging
+    console.log('Gemini raw response length:', cleaned.length);
+    
+    try {
+      return JSON.parse(cleaned);
+    } catch (parseError: any) {
+      console.error('JSON Parse Error:', parseError.message);
+      console.error('JSON excerpt (first 500 chars):', cleaned.substring(0, 500));
+      console.error('JSON excerpt (last 500 chars):', cleaned.substring(Math.max(0, cleaned.length - 500)));
+      throw new Error('INVALID_RESPONSE: IA retornou resposta mal formatada. Tentando novamente com fallback...');
+    }
     
   } catch (error: any) {
     clearTimeout(timeoutId);
@@ -388,64 +410,23 @@ ${i + 1}. ${p.sku_a_name} + ${p.sku_b_name}
 
 SKUs MAL POSICIONADOS (Classe vs Zona):
 ${misplacedSKUs.slice(0, 15).map(s => `
-- ${s.sku_code} (${s.sku_name})
-  Classe: ${s.class} | Localização: ${s.current_location} (Zona ${s.current_zone})
-  Picks/mês: ${Math.round(s.pickFrequencyMonthly)}
+- ${s.sku_code}: Classe ${s.class}, Zona ${s.current_zone}, ${Math.round(s.pickFrequencyMonthly)} picks/mês
 `).join('')}
 
-ANÁLISE DE ROTAS E DISTÂNCIAS (Estado Atual):
-- Distância média por pedido: ${avgDistancePerOrder.toFixed(0)}m
-- Tempo médio por pedido: ${avgTimePerOrderMinutes.toFixed(1)} minutos
-- Operadores no turno: 25 (assumido para cálculo)
-- Pedidos processados/dia: 1.200 (assumido)
-- Velocidade de caminhada: 1.5 m/s (padrão logístico)
+ANÁLISE DE ROTAS:
+- Distância média atual: ${avgDistancePerOrder.toFixed(0)}m/pedido
+- Tempo médio atual: ${avgTimePerOrderMinutes.toFixed(1)} min/pedido
+- Projeção otimizada: ${(avgDistancePerOrder * 0.65).toFixed(0)}m (-35%)
+- Economia anual: ${Math.round((avgTimePerOrderMinutes * 0.35 * 1200 * 250) / 60)} horas (25 operadores, 1200 pedidos/dia)
 
-PROJEÇÃO DE ECONOMIA (após reorganização otimizada):
-- Redução esperada de distância: 30-40% (baseado em benchmarks de warehouse slotting)
-- Nova distância média projetada: ${(avgDistancePerOrder * 0.65).toFixed(0)}m/pedido
-- Tempo economizado por pedido: ${(avgTimePerOrderMinutes * 0.35).toFixed(1)} minutos
-- Horas economizadas/ano (25 operadores): ~${Math.round((avgTimePerOrderMinutes * 0.35 * 1200 * 250) / 60)} horas
-- Impacto financeiro estimado: R$ ${Math.round((avgTimePerOrderMinutes * 0.35 * 1200 * 250 * 18) / 60).toLocaleString()}/ano (assumindo R$18/hora/operador)
+CRITÉRIOS DE PRIORIZAÇÃO:
+Priority 1 (Alta): SKU classe A em Zona C, Lift > 1.8 + distância > 50m, >200 picks/mês
+Priority 2 (Média): SKU classe A em Zona B, classe B em Zona C, Lift 1.5-1.8 + distância > 30m
+Priority 3 (Baixa): Ajustes finos, Lift 1.2-1.5
 
-REGRAS DE OTIMIZAÇÃO:
-1. SKUs classe A devem estar na Zona A (0-30m da expedição)
-2. SKUs classe B na Zona B (30-60m da expedição)
-3. SKUs classe C/D na Zona C (60-100m da expedição)
-4. Pares com Lift > 1.5 devem estar a menos de 10m de distância
-5. SKUs pesados (>20kg) devem ficar em posições baixas e acessíveis
-6. Balancear distribuição entre zonas para evitar congestionamento
+TAREFA: Gere 18-20 recomendações focando em máximo impacto (Lei de Pareto).
 
-CRITÉRIOS DE PRIORIZAÇÃO (FUNDAMENTAL SEGUIR RIGOROSAMENTE):
-
-PRIORITY 1 - Alta Prioridade (melhoria estimada >20%):
-  • SKUs classe A posicionados em Zona C (máximo impacto)
-  • Pares de produtos com Lift > 1.8 e distância atual > 50m
-  • SKUs com >200 picks/mês atualmente em zona inadequada
-  Razão: Estes movimentos geram economia de 60-80m por pick
-
-PRIORITY 2 - Média Prioridade (melhoria estimada 10-20%):
-  • SKUs classe A posicionados em Zona B (pode melhorar)
-  • SKUs classe B posicionados em Zona C
-  • Pares de produtos com Lift 1.5-1.8 e distância > 30m
-  Razão: Movimentos geram economia de 30-50m por pick
-
-PRIORITY 3 - Baixa Prioridade (melhoria estimada 5-10%):
-  • SKUs classe B em Zona B (ajuste fino)
-  • Pares de produtos com Lift 1.2-1.5
-  • Balanceamento de carga entre zonas para evitar congestionamento
-  Razão: Movimentos geram economia de 10-25m por pick
-
-TAREFA:
-Gere 18-20 recomendações de reorganização, priorizadas por impacto no tempo de picking.
-Foque nos movimentos que geram MÁXIMO impacto (Lei de Pareto: 20% dos movimentos = 80% da melhoria).
-
-Para cada recomendação, considere:
-- O impacto da classificação ABC (classe A tem prioridade máxima)
-- Afinidade entre produtos (produtos frequentemente pedidos juntos devem estar próximos)
-- Redução de distância percorrida
-- Ergonomia (produtos pesados em posições acessíveis)
-
-FORMATO DE SAÍDA (JSON válido, sem markdown):
+FORMATO DE SAÍDA (JSON válido):
 {
   "recommendations": [
     {
@@ -455,12 +436,12 @@ FORMATO DE SAÍDA (JSON válido, sem markdown):
       "current_zone": "C",
       "recommended_location": "A-03",
       "recommended_zone": "A",
-      "reason": "SKU classe A com 180 picks/mês, representando 3.2% do volume total de picks do warehouse. Atualmente posicionado na Zona C a 75m da expedição. Movendo para Zona A (15m da expedição), reduzimos 60m por pick. Com 180 picks/mês, isso economiza 10.800m (10.8 km) de caminhada mensal. Considerando 25 operadores, o impacto acumulado é de 270 km/mês economizados. Tempo economizado estimado: 2.4 minutos por pedido contendo este SKU.",
+      "reason": "Classe A com 180 picks/mês (3.2% do volume). Zona C a 75m. Mover para Zona A (15m) economiza 60m/pick = 10.8km/mês. Impacto: 270km/mês com 25 operadores. Tempo: 2.4min/pedido economizados.",
       "priority": 1,
       "estimated_improvement_percent": 28.5,
       "distance_saved_per_pick_m": 60,
       "related_skus": ["HIG002", "HIG003"],
-      "affinity_note": "Frequentemente pedido junto com Condicionador Premium (HIG002 - Lift 1.82, co-ocorrência em 78% dos pedidos) e Sabonete Líquido (HIG003 - Lift 1.65, co-ocorrência em 65%). Distância atual entre HIG001 e HIG002: 85m. Recomendação: posicionar estes 3 SKUs na mesma área (raio máximo de 8m) para permitir picking combinado em uma única viagem."
+      "affinity_note": "Pedido junto com Condicionador (HIG002, Lift 1.82, 78% dos pedidos) e Sabonete (HIG003, Lift 1.65, 65%). Distância atual HIG001-HIG002: 85m. Recomendação: raio de 8m para picking combinado."
     }
   ],
   "summary": {
@@ -476,20 +457,14 @@ FORMATO DE SAÍDA (JSON válido, sem markdown):
   }
 }
 
-INSTRUÇÕES CRÍTICAS PARA A IA GEMINI:
-1. Razões DEVEM ser específicas com números reais extraídos dos dados fornecidos (não use valores genéricos)
-2. Para CADA recomendação, calcule o impacto individual: (distância economizada) × (picks/mês) × (25 operadores)
-3. related_skus DEVE listar TODOS os SKUs com Lift > 1.5 em relação ao SKU sendo recomendado
-4. affinity_note DEVE mencionar:
-   - Valores exatos de Lift para cada par
-   - Percentual de co-ocorrência
-   - Distância atual entre os SKUs relacionados
-   - Recomendação de distância ideal (<10m para Lift > 1.8, <15m para Lift 1.5-1.8)
-5. Priorize reorganizações que movem múltiplos SKUs relacionados simultaneamente (maior eficiência operacional)
-6. Limite a 18-20 recomendações focando no máximo impacto (Lei de Pareto: 20% dos movimentos geram 80% da melhoria)
-7. Analise profundamente a combinação de: classificação ABC + afinidade + distância para cada recomendação
-8. Seja preciso nos cálculos de summary: use os dados reais de avgDistancePerOrder e avgTimePerOrderMinutes fornecidos
-9. Responda APENAS com o JSON válido, sem explicações adicionais ou markdown.
+INSTRUÇÕES:
+1. Razões com números reais dos dados (não genéricos)
+2. Calcule impacto: distância × picks × operadores
+3. Liste SKUs relacionados com Lift > 1.5
+4. affinity_note com Lift exato, %, distâncias, recomendação ideal
+5. 18-20 recomendações focando máximo ROI
+6. Combine ABC + afinidade + distância
+7. JSON válido apenas, sem markdown
 `;
 }
 

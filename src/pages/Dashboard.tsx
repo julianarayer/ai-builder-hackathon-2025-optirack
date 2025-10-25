@@ -112,6 +112,8 @@ export default function Dashboard() {
       );
 
       if (result.success) {
+        console.log('✅ Dashboard: Analysis result received', result);
+        
         toast.success(`✅ Análise concluída! ${result.summary?.total_recommendations || 0} recomendações geradas.`, {
           description: `Economia estimada: ${result.summary?.estimated_overall_improvement_percent?.toFixed(1) || 0}% no tempo de picking`
         });
@@ -123,7 +125,12 @@ export default function Dashboard() {
         setIsProcessing(false);
 
         // Reload dashboard data
+        console.log('🔄 Reloading dashboard data...');
         await loadDashboardData();
+      } else {
+        console.error('❌ Dashboard: Analysis failed', result);
+        toast.error('Análise falhou. Tente novamente.');
+        setIsProcessing(false);
       }
     } catch (error: any) {
       console.error('Error processing data:', error);
@@ -242,7 +249,9 @@ export default function Dashboard() {
           <MetricCard
             icon={Navigation}
             title="Distância Reduzida"
-            value={latestRun ? `${(latestRun.estimated_distance_saved_per_order_m / 1000)?.toFixed(1) || 0} km/dia` : "--"}
+            value={latestRun?.estimated_distance_reduction_percent 
+              ? `${latestRun.estimated_distance_reduction_percent?.toFixed(0) || 0}%` 
+              : "--"}
           />
           <MetricCard
             icon={Lightbulb}
