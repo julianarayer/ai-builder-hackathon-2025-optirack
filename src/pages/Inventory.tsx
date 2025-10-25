@@ -71,16 +71,19 @@ export default function Inventory() {
       setWarehouseId(warehouse.id);
 
       // Check if we need to seed demo data
-      const { data: inventoryCheck } = await supabase
+      const { data: inventoryCheck, count } = await supabase
         .from('inventory_snapshots')
-        .select('id', { count: 'exact', head: true })
-        .eq('warehouse_id', warehouse.id);
+        .select('id', { count: 'exact' })
+        .eq('warehouse_id', warehouse.id)
+        .limit(1);
 
       // Auto-seed if no inventory data exists
-      if (!inventoryCheck || inventoryCheck.length === 0) {
+      if (!count || count === 0) {
         try {
           toast.info('Criando dados de inventário automáticos...');
           await seedDemoData();
+          // Reload data after seeding
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for seed to complete
         } catch (error) {
           console.error('Error auto-seeding:', error);
         }
