@@ -407,6 +407,7 @@ export default function Dashboard() {
                                   d={path}
                                   fill={colors[item.velocity_class as keyof typeof colors]}
                                   className="transition-opacity hover:opacity-80 cursor-pointer"
+                                  onClick={() => navigate(`/distribuicao-abc?classe=${item.velocity_class}`)}
                                 />
                                 <text
                                   x={labelX}
@@ -443,7 +444,11 @@ export default function Dashboard() {
                           D: 'bg-gray-500'
                         };
                         return (
-                          <div key={item.velocity_class} className="flex items-center gap-2">
+                          <div 
+                            key={item.velocity_class} 
+                            className="flex items-center gap-2 cursor-pointer hover:bg-primary-50 p-2 rounded-lg transition-colors"
+                            onClick={() => navigate(`/distribuicao-abc?classe=${item.velocity_class}`)}
+                          >
                             <div className={`w-3 h-3 rounded-full ${colors[item.velocity_class as keyof typeof colors]}`} />
                             <span className="text-sm font-medium">Classe {item.velocity_class}</span>
                             <span className="text-xs text-neutral-600">({item.sku_count} SKUs)</span>
