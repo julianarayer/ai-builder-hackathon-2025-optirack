@@ -422,8 +422,8 @@ const ABCDistribution = () => {
           </Tabs>
         </div>
 
-      {/* SKU Details Modal */}
-      <Dialog open={!!selectedSKU} onOpenChange={() => setSelectedSKU(null)}>
+        {/* SKU Details Modal */}
+        <Dialog open={!!selectedSKU} onOpenChange={() => setSelectedSKU(null)}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -549,9 +549,8 @@ const ABCDistribution = () => {
           )}
         </DialogContent>
         </Dialog>
-          </div>
-        </div>
       </div>
+    </div>
     </SidebarProvider>
   );
 };
