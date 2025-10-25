@@ -96,7 +96,7 @@ export default function Landing() {
             </h1>
             
             <p className="text-xl text-neutral-600 max-w-2xl" style={{ textShadow: '0 1px 2px rgba(255,255,255,0.8)' }}>
-              Menos caminho, mais entrega. Reorganize SKUs com base em dados reais com recomendações inteligentes - Análise ABC, afinidade de produtos e otimização de rotas em um só lugar.
+              Reorganize SKUs com base em dados reais com recomendações inteligentes: análise ABC, afinidade de produtos e otimização de rotas em um só lugar.
             </p>
             
             <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
