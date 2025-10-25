@@ -15,6 +15,7 @@ import { DataPreview } from "@/components/upload/DataPreview";
 import { ColumnMappingModal } from "@/components/upload/ColumnMappingModal";
 import { Progress } from "@/components/ui/progress";
 import { ABCExplanationDialog } from "@/components/ui/abc-explanation-dialog";
+import { UserProfileSheet } from "@/components/profile/UserProfileSheet";
 import {
   Package,
   Clock,
@@ -55,6 +56,8 @@ export default function Dashboard() {
   const [showMappingModal, setShowMappingModal] = useState(false);
   const [pendingMappingData, setPendingMappingData] = useState<any>(null);
   const [showABCExplanation, setShowABCExplanation] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [warehouseProfile, setWarehouseProfile] = useState<any>(null);
 
   useEffect(() => {
     // Check auth state
@@ -211,9 +214,22 @@ export default function Dashboard() {
     setTopSKUs(skus);
   };
 
+  const loadWarehouseProfile = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('warehouse_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+    
+    setWarehouseProfile(data);
+  };
+
   useEffect(() => {
     if (user) {
       loadDashboardData();
+      loadWarehouseProfile();
     }
   }, [user]);
 
@@ -248,7 +264,10 @@ export default function Dashboard() {
                 Histórico
               </Button>
               
-              <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-neutral-100/80 hover:bg-neutral-100 transition-colors">
+              <div 
+                className="flex items-center gap-2 px-3 py-2 rounded-full bg-neutral-100/80 hover:bg-neutral-100 transition-colors cursor-pointer"
+                onClick={() => setIsProfileOpen(true)}
+              >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-200">
                   <UserIcon className="h-4 w-4 text-neutral-900" />
                 </div>
@@ -605,6 +624,17 @@ export default function Dashboard() {
         isOpen={showABCExplanation} 
         onClose={() => setShowABCExplanation(false)} 
       />
+
+      {/* User Profile Sheet */}
+      {user && (
+        <UserProfileSheet
+          open={isProfileOpen}
+          onOpenChange={setIsProfileOpen}
+          user={user}
+          warehouseProfile={warehouseProfile}
+          onUpdate={loadWarehouseProfile}
+        />
+      )}
     </div>
   );
 }
