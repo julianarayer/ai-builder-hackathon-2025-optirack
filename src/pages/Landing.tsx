@@ -50,9 +50,38 @@ export default function Landing() {
 
   return (
     <div className="page-landing min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
+      {/* Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-neutral-200/50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+              <img src={optirackLogo} alt="OptiRack" className="h-8 w-8 object-contain" />
+              <span className="font-medium text-neutral-900 text-lg">OptiRack</span>
+            </div>
+            
+            {/* Botões de Auth */}
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => navigate('/login', { state: { mode: 'signup' } })}
+                className="px-4 py-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
+              >
+                Criar conta
+              </button>
+              <button 
+                onClick={() => navigate('/login')}
+                className="px-5 py-2 text-sm font-medium bg-primary-accent text-white rounded-full hover:bg-primary-accent/90 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Entrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section 
-        className="relative min-h-[90vh] flex items-center overflow-hidden"
+        className="relative min-h-screen flex items-center overflow-hidden pt-24"
         style={{
           backgroundImage: `linear-gradient(
             to right,

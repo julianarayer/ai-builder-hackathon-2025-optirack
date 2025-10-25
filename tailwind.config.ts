@@ -23,6 +23,7 @@ export default {
           500: "hsl(var(--primary-500))",
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          accent: "hsl(var(--primary-accent))",
         },
         neutral: {
           50: "hsl(var(--neutral-50))",

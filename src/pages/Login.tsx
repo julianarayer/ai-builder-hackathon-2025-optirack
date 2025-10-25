@@ -3,12 +3,12 @@
  * Unified authentication with Supabase
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Warehouse, Eye, EyeOff, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import optirackLogo from "@/assets/optirack-logo.png";
 import { toast } from "sonner";
@@ -17,7 +17,15 @@ type AuthMode = 'login' | 'signup';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState<AuthMode>('login');
+  
+  // Detectar modo de signup via location state
+  useEffect(() => {
+    if (location.state?.mode === 'signup') {
+      setMode('signup');
+    }
+  }, [location.state]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
