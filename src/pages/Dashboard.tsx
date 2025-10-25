@@ -238,19 +238,17 @@ export default function Dashboard() {
             icon={Package}
             title="Total SKUs"
             value={latestRun?.total_skus_analyzed?.toString() || "--"}
-            changePercent={latestRun ? 12 : undefined}
-            trend={latestRun ? "up" : undefined}
           />
           <MetricCard
             icon={Clock}
             title="Tempo Economizado"
-            value={latestRun ? `${latestRun.estimated_overall_improvement_percent?.toFixed(1) || 0}%` : "--"}
+            value={latestRun ? `${latestRun.estimated_time_reduction_percent?.toFixed(1) || 0}%` : "--"}
           />
           <MetricCard
             icon={Navigation}
             title="Distância Reduzida"
-            value={latestRun?.estimated_distance_reduction_percent 
-              ? `${latestRun.estimated_distance_reduction_percent?.toFixed(0) || 0}%` 
+            value={latestRun 
+              ? `${((latestRun.current_avg_distance_per_order_m || 0) - (latestRun.optimized_avg_distance_per_order_m || 0)).toFixed(0)}m/pedido`
               : "--"}
           />
           <MetricCard
