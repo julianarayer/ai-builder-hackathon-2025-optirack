@@ -25,18 +25,18 @@ export default function Landing() {
   const benefits = [
     {
       icon: Clock,
-      title: "15-40% Menos Tempo",
-      description: "Redução comprovada no tempo de picking",
+      title: "15-40% menos tempo",
+      description: "Redução no tempo de picking",
     },
     {
       icon: Brain,
-      title: "IA Identifica Padrões",
+      title: "IA identifica padrões",
       description: "Detecta produtos frequentemente pedidos juntos",
     },
     {
       icon: TrendingUp,
-      title: "ROI em 3-6 Meses",
-      description: "Retorno rápido do investimento",
+      title: "Visualização dinâmica",
+      description: "Interface intuitiva mostrando heatmaps de eficiência",
     },
   ];
 
@@ -96,7 +96,9 @@ export default function Landing() {
             </h1>
             
             <p className="text-xl text-neutral-600 max-w-2xl" style={{ textShadow: '0 1px 2px rgba(255,255,255,0.8)' }}>
-              Reorganize SKUs com base em dados reais com recomendações inteligentes: análise ABC, afinidade de produtos e otimização de rotas em um só lugar.
+              Reorganize SKUs com base em dados reais<br />
+              utilizando recomendações inteligentes: análise ABC, afinidade de produtos<br />
+              e otimização de rotas em um só lugar.
             </p>
             
             <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
@@ -151,7 +153,7 @@ export default function Landing() {
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-neutral-900 mb-4">
-            Como Funciona
+            Como funciona?
           </h2>
           <p className="text-xl text-neutral-600">
             Quatro passos simples para otimizar seu armazém
@@ -191,17 +193,17 @@ export default function Landing() {
       <section className="container mx-auto px-4 py-20">
         <GlassCard className="text-center p-12 space-y-6 bg-gradient-to-br from-primary-100/50 to-primary-200/30">
           <h2 className="text-4xl font-bold text-neutral-900">
-            Pronto para Começar?
+            Pronto para começar?
           </h2>
           <p className="text-xl text-neutral-600 max-w-2xl mx-auto">
-            Junte-se a centenas de empresas que já otimizaram suas operações com OptiRack
+            Otimize suas operações com OptiRack
           </p>
           <Button 
             size="lg" 
             className="group"
             onClick={() => navigate('/login')}
           >
-            Começar Agora
+            Começar agora
             <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
           </Button>
         </GlassCard>
