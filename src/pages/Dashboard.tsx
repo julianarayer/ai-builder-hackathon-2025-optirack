@@ -215,41 +215,44 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50">
       {/* Header */}
-      <header className="glass-card sticky top-0 z-50 border-b border-primary-300/20">
-        <div className="container mx-auto px-4 py-4">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-neutral-200/50">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80">
-                <img src={optirackLogo} alt="OptiRack Logo" className="h-8 w-8 object-contain" />
-              </div>
-              <h1 className="text-xl font-medium gradient-text">OptiRack AI</h1>
+            {/* Logo */}
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
+              <img src={optirackLogo} alt="OptiRack" className="h-8 w-8" />
+              <span className="text-lg font-medium text-neutral-900">OptiRack</span>
             </div>
 
-            <div className="flex items-center gap-4">
+            {/* Right side actions */}
+            <div className="flex items-center gap-3">
               <Button 
-                variant="outline"
+                variant="ghost"
                 onClick={() => navigate('/historico')}
                 className="hidden md:flex"
               >
                 <History className="mr-2 h-4 w-4" />
                 Histórico
               </Button>
-              <div className="flex items-center gap-3 glass-card px-4 py-2 rounded-2xl">
+              
+              <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-neutral-100/80 hover:bg-neutral-100 transition-colors">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-200">
                   <UserIcon className="h-4 w-4 text-neutral-900" />
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-neutral-600">Olá,</span>
+                <div className="hidden md:flex flex-col">
+                  <span className="text-xs text-neutral-500">Olá,</span>
                   <span className="text-sm font-medium text-neutral-900">
                     {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário'}
                   </span>
                 </div>
               </div>
+
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleLogout}
                 title="Sair"
+                className="hover:bg-neutral-100"
               >
                 <LogOut className="h-5 w-5" />
               </Button>
@@ -257,6 +260,9 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
+
+      {/* Spacer for fixed header */}
+      <div className="h-[72px]" />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 space-y-8">
