@@ -29,11 +29,13 @@ export interface AnalysisResult {
  * @param data - Parsed CSV data
  * @param fileName - Original file name
  * @param onProgress - Optional callback for progress updates
+ * @param columnMapping - Optional column mapping for non-standard CSVs
  */
 export async function processWarehouseData(
   data: any[],
   fileName: string,
-  onProgress?: (progress: AnalysisProgress) => void
+  onProgress?: (progress: AnalysisProgress) => void,
+  columnMapping?: { [csvCol: string]: string }
 ): Promise<AnalysisResult> {
   // Frontend validations
   if (data.length < 100) {
@@ -75,7 +77,8 @@ export async function processWarehouseData(
     const { data: result, error } = await supabase.functions.invoke<AnalysisResult>('analyze-warehouse', {
       body: {
         csvData: data,
-        fileName: fileName
+        fileName: fileName,
+        columnMapping: columnMapping // Pass mapping to backend
       }
     });
 

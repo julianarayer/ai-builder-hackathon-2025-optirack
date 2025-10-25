@@ -8,9 +8,10 @@ import { Upload, FileSpreadsheet, X, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import * as XLSX from 'xlsx';
+import { supabase } from "@/integrations/supabase/client";
 
 interface FileUploaderProps {
-  onFileSelect: (data: any[], fileName: string) => void;
+  onFileSelect: (data: any[], fileName: string, mappingData?: any) => void;
   acceptedFormats?: string[];
   maxSizeMB?: number;
 }
@@ -60,6 +61,27 @@ export function FileUploader({
     });
   };
 
+  const detectColumns = async (columns: string[], sampleRows: any[]) => {
+    try {
+      console.log('🔍 Calling auto-detect-columns with:', { columns, sampleCount: sampleRows.length });
+      
+      const { data, error } = await supabase.functions.invoke('auto-detect-columns', {
+        body: { csvColumns: columns, sampleRows }
+      });
+
+      if (error) {
+        console.error('Column detection error:', error);
+        return null;
+      }
+
+      console.log('✅ Column detection result:', data);
+      return data;
+    } catch (err) {
+      console.error('Error detecting columns:', err);
+      return null;
+    }
+  };
+
   const handleFile = useCallback(async (file: File) => {
     setError("");
     
@@ -72,7 +94,20 @@ export function FileUploader({
     try {
       setSelectedFile(file);
       const parsedData = await parseFile(file);
-      onFileSelect(parsedData, file.name);
+      
+      // Extract columns and samples for auto-detection
+      if (parsedData.length > 0) {
+        const columns = Object.keys(parsedData[0]);
+        const sampleRows = parsedData.slice(0, 3);
+        
+        // Call auto-detection
+        const mappingData = await detectColumns(columns, sampleRows);
+        
+        // Pass mapping data to callback
+        onFileSelect(parsedData, file.name, mappingData);
+      } else {
+        onFileSelect(parsedData, file.name);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao processar arquivo');
       setSelectedFile(null);

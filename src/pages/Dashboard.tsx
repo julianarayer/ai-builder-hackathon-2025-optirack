@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FileUploader } from "@/components/upload/FileUploader";
 import { DataPreview } from "@/components/upload/DataPreview";
+import { ColumnMappingModal } from "@/components/upload/ColumnMappingModal";
 import { Progress } from "@/components/ui/progress";
 import {
   Package,
@@ -47,6 +48,9 @@ export default function Dashboard() {
   const [latestRun, setLatestRun] = useState<any>(null);
   const [abcDistribution, setAbcDistribution] = useState<any[]>([]);
   const [topSKUs, setTopSKUs] = useState<any[]>([]);
+  const [columnMapping, setColumnMapping] = useState<any>(null);
+  const [showMappingModal, setShowMappingModal] = useState(false);
+  const [pendingMappingData, setPendingMappingData] = useState<any>(null);
 
   useEffect(() => {
     // Check auth state
@@ -88,9 +92,31 @@ export default function Dashboard() {
     }
   };
 
-  const handleFileSelect = (data: any[], filename: string) => {
+  const handleFileSelect = (data: any[], filename: string, mappingData?: any) => {
     setUploadedData(data);
     setFileName(filename);
+
+    // If mapping data available, show confirmation modal
+    if (mappingData && mappingData.detected_mapping) {
+      setPendingMappingData(mappingData);
+      setShowMappingModal(true);
+    } else {
+      // No detection: proceed with default mapping (fallback)
+      setColumnMapping(null);
+    }
+  };
+
+  const handleConfirmMapping = (finalMapping: { [key: string]: string }) => {
+    setColumnMapping(finalMapping);
+    setShowMappingModal(false);
+    setPendingMappingData(null);
+  };
+
+  const handleCancelMapping = () => {
+    setShowMappingModal(false);
+    setPendingMappingData(null);
+    setUploadedData(null);
+    setFileName("");
   };
 
   const handleProcessData = async () => {
@@ -108,7 +134,8 @@ export default function Dashboard() {
         fileName,
         (progress) => {
           setAnalysisProgress(progress);
-        }
+        },
+        columnMapping // Pass column mapping to backend
       );
 
       if (result.success) {
@@ -121,6 +148,7 @@ export default function Dashboard() {
         // Clear upload data
         setUploadedData(null);
         setFileName("");
+        setColumnMapping(null);
         setShowUploadDialog(false);
         setIsProcessing(false);
 
@@ -403,19 +431,20 @@ export default function Dashboard() {
                   <Button 
                     variant="outline" 
                     onClick={() => {
+                      setShowUploadDialog(false);
                       setUploadedData(null);
                       setFileName("");
                     }}
                     disabled={isProcessing}
                   >
-                    Limpar
+                    Cancelar
                   </Button>
                   <Button 
                     onClick={handleProcessData}
                     disabled={isProcessing}
                     className="flex-1"
                   >
-                    {isProcessing ? "Processando..." : "Processar Análise"}
+                    {isProcessing ? 'Processando...' : 'Processar Análise'}
                   </Button>
                 </div>
               </>
@@ -423,6 +452,21 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Column Mapping Modal */}
+      {pendingMappingData && (
+        <ColumnMappingModal
+          isOpen={showMappingModal}
+          detectedMapping={pendingMappingData.detected_mapping}
+          confidenceScores={pendingMappingData.confidence_scores}
+          overallConfidence={pendingMappingData.overall_confidence}
+          missingFields={pendingMappingData.missing_fields || []}
+          extraColumns={pendingMappingData.extra_columns || []}
+          warnings={pendingMappingData.warnings || []}
+          onConfirm={handleConfirmMapping}
+          onCancel={handleCancelMapping}
+        />
+      )}
     </div>
   );
 }

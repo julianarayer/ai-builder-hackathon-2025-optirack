@@ -499,10 +499,24 @@ serve(async (req) => {
     }));
 
     // Parse request body
-    const { csvData, fileName } = await req.json();
+    const { csvData, fileName, columnMapping } = await req.json();
+
+    // Apply column mapping if provided
+    let processedData = csvData;
+    if (columnMapping) {
+      console.log('📋 Applying column mapping:', columnMapping);
+      processedData = csvData.map((row: any) => {
+        const mappedRow: any = {};
+        Object.entries(columnMapping as { [key: string]: string }).forEach(([csvCol, standardField]) => {
+          mappedRow[standardField as string] = row[csvCol];
+        });
+        return mappedRow;
+      });
+      console.log('✅ Data mapped. Sample:', processedData[0]);
+    }
 
     // Validate CSV data
-    const validation = validateCSVData(csvData);
+    const validation = validateCSVData(processedData);
     if (!validation.valid) {
       return new Response(JSON.stringify({ 
         success: false, 
@@ -514,7 +528,7 @@ serve(async (req) => {
     }
 
     // Normalize data
-    const normalizedData = normalizeCSVData(csvData);
+    const normalizedData = normalizeCSVData(processedData);
 
     // Calculate date range
     const dates = normalizedData.map(r => new Date(r.order_date));
