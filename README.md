@@ -8,7 +8,7 @@ Reorganize SKUs com base em dados reais utilizando recomendações inteligentes:
 [![React](https://img.shields.io/badge/React-Framework-61DAFB?style=for-the-badge\&logo=react)](https://reactjs.org/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-**demo**: [https://lovable.dev/projects/c09446f5-1278-4dd8-98f2-f04abb8abc87](https://lovable.dev/projects/c09446f5-1278-4dd8-98f2-f04abb8abc87)
+**demo**: (https://optirack-ai-warehouse.lovable.app/)
 **documentação rápida**: [como usar](#como-usar) • [arquitetura](#arquitetura) • [roadmap](#roadmap)
 
 ---
