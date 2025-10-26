@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { GlassCard } from "@/components/ui/glass-card";
 import { MetricCard } from "@/components/ui/metric-card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FileUploader } from "@/components/upload/FileUploader";
 import { DataPreview } from "@/components/upload/DataPreview";
@@ -318,11 +319,11 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Welcome Section */}
-        <div className="space-y-2">
-          <h2 className="text-3xl font-medium text-neutral-900">
+        <div className="space-y-3">
+          <h2 className="text-4xl font-bold text-neutral-900">
             Bem-vindo ao OptiRack
           </h2>
-          <p className="text-lg text-subtle">
+          <p className="text-lg text-neutral-600">
             {latestRun 
               ? 'Acompanhe o desempenho das suas análises e otimizações' 
               : 'Comece fazendo o upload dos seus dados de pedidos para receber recomendações inteligentes'}
@@ -340,18 +341,20 @@ export default function Dashboard() {
         )}
 
         {/* KPI Metrics */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <div onClick={() => latestRun && navigate('/skus')} className={latestRun ? 'cursor-pointer' : ''}>
             <MetricCard
               icon={Package}
-              title="Total SKUs"
+              title="Total SKUs Analisados"
               value={latestRun?.total_skus_analyzed?.toString() || "--"}
+              variant="pink"
             />
           </div>
           <MetricCard
             icon={Clock}
             title="Tempo Economizado"
             value={latestRun ? `${latestRun.estimated_time_reduction_percent?.toFixed(1) || 0}%` : "--"}
+            variant="blue"
           />
           <MetricCard
             icon={Navigation}
@@ -359,11 +362,13 @@ export default function Dashboard() {
             value={latestRun 
               ? `${((latestRun.current_avg_distance_per_order_m || 0) - (latestRun.optimized_avg_distance_per_order_m || 0)).toFixed(0)}m/pedido`
               : "--"}
+            variant="purple"
           />
           <MetricCard
             icon={Lightbulb}
-            title="Recomendações"
-            value={latestRun ? `${latestRun.recommendations_generated || 0} geradas` : "--"}
+            title="Recomendações Geradas"
+            value={latestRun ? `${latestRun.recommendations_generated || 0}` : "--"}
+            variant="green"
           />
         </div>
 
@@ -418,20 +423,25 @@ export default function Dashboard() {
         {/* Quick Stats */}
         {latestRun && (
           <div className="grid gap-6 md:grid-cols-2">
-            <GlassCard className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-neutral-900">
-                  Distribuição ABC
-                </h3>
+            <div className="rounded-3xl p-6 bg-gradient-to-br from-pink-50 via-pink-50/30 to-white border border-pink-200/50 shadow-sm hover:shadow-lg transition-all">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-pink-400 to-pink-500 shadow-lg shadow-pink-200">
+                    <BarChart3 className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-neutral-900">
+                    Distribuição ABC
+                  </h3>
+                </div>
                 <button
                   onClick={() => setShowABCExplanation(true)}
-                  className="text-xs font-light text-pink-500 hover:text-pink-600 transition-colors flex items-center gap-1"
+                  className="text-xs font-medium text-pink-600 hover:text-pink-700 transition-colors flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-pink-100/60 hover:bg-pink-100"
                 >
                   O que é isso?
-                  <InfoIcon className="h-3 w-3" />
+                  <InfoIcon className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div className="flex items-center justify-center h-64">
+              <div className="flex items-center justify-center h-64 overflow-y-auto">
                 {abcDistribution.length > 0 ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <div className="w-64 h-64">
@@ -505,23 +515,32 @@ export default function Dashboard() {
                         })()}
                       </svg>
                     </div>
-                    <div className="ml-6 space-y-2">
+                    <div className="ml-6 space-y-3">
                       {abcDistribution.map(item => {
-                        const colors = {
-                          A: 'bg-pink-500',
-                          B: 'bg-blue-500',
-                          C: 'bg-yellow-500',
-                          D: 'bg-gray-500'
+                        const badgeStyles = {
+                          A: 'bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md shadow-pink-200',
+                          B: 'bg-gradient-to-r from-blue-400 to-blue-500 text-white shadow-md shadow-blue-200',
+                          C: 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-md shadow-yellow-200',
+                          D: 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-md shadow-gray-200'
                         };
                         return (
                           <div 
                             key={item.velocity_class} 
-                            className="flex items-center gap-2 cursor-pointer hover:bg-primary-50 p-2 rounded-lg transition-colors"
+                            className="flex items-center justify-between cursor-pointer hover:bg-pink-50 p-3 rounded-xl transition-all hover:shadow-sm border border-transparent hover:border-pink-200"
                             onClick={() => navigate(`/distribuicao-abc?classe=${item.velocity_class}`)}
                           >
-                            <div className={`w-3 h-3 rounded-full ${colors[item.velocity_class as keyof typeof colors]}`} />
-                            <span className="text-sm font-medium">Classe {item.velocity_class}</span>
-                            <span className="text-xs text-neutral-600">({item.sku_count} SKUs)</span>
+                            <div className="flex items-center gap-3">
+                              <div className={`px-3 py-1.5 rounded-lg font-bold text-sm ${badgeStyles[item.velocity_class as keyof typeof badgeStyles]}`}>
+                                {item.velocity_class}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-sm font-semibold text-neutral-900">Classe {item.velocity_class}</span>
+                                <span className="text-xs text-neutral-500">{item.sku_count} SKUs</span>
+                              </div>
+                            </div>
+                            <Badge variant="secondary" className="text-xs font-medium">
+                              {item.percentage.toFixed(0)}%
+                            </Badge>
                           </div>
                         );
                       })}
@@ -536,56 +555,66 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
-            </GlassCard>
+            </div>
 
-            <GlassCard className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-neutral-900">
-                  Pares de Afinidade (Co-ocorrência)
-                </h3>
+            <div className="rounded-3xl p-6 bg-gradient-to-br from-blue-50 via-blue-50/30 to-white border border-blue-200/50 shadow-sm hover:shadow-lg transition-all">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 shadow-lg shadow-blue-200">
+                    <Lightbulb className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-neutral-900">
+                    Pares de Afinidade
+                  </h3>
+                </div>
                 <button
                   onClick={() => setShowAffinityExplanation(true)}
-                  className="text-xs font-light text-pink-500 hover:text-pink-600 transition-colors flex items-center gap-1"
+                  className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-100/60 hover:bg-blue-100"
                 >
                   Como funciona?
-                  <InfoIcon className="h-3 w-3" />
+                  <InfoIcon className="h-3.5 w-3.5" />
                 </button>
               </div>
               <div className="flex items-center justify-center h-64 overflow-y-auto">
                 {affinityPairs.length > 0 ? (
-                  <div className="space-y-2 w-full pr-2">
+                  <div className="space-y-3 w-full pr-2">
                     {affinityPairs.map((pair: any, index) => (
                       <div 
                         key={pair.id || index} 
-                        className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50/30 to-transparent rounded-lg hover:from-primary-100/40 transition-colors border border-primary-100/30 cursor-pointer"
+                        className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-100/40 via-blue-50/30 to-white rounded-xl hover:from-blue-100/60 hover:shadow-md transition-all border border-blue-200/40 cursor-pointer group"
                         onClick={() => navigate('/afinidade')}
                       >
                         {/* Lado esquerdo: SKUs e posição */}
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <span className="text-xs font-bold text-primary-300 w-6 flex-shrink-0">
-                            #{index + 1}
-                          </span>
+                          <div className="px-2.5 py-1 rounded-lg bg-gradient-to-br from-blue-400 to-blue-500 shadow-md shadow-blue-200">
+                            <span className="text-xs font-bold text-white">
+                              #{index + 1}
+                            </span>
+                          </div>
                           <div className="flex flex-col min-w-0">
-                            <div className="font-medium text-sm text-neutral-900 truncate">
+                            <div className="font-semibold text-sm text-neutral-900 truncate group-hover:text-blue-600 transition-colors">
                               {pair.sku_a?.sku_code || 'N/A'} + {pair.sku_b?.sku_code || 'N/A'}
                             </div>
-                            <div className="text-xs text-neutral-500">
-                              {(pair.support * 100).toFixed(1)}% dos pedidos • {pair.co_occurrence_count} vezes
+                            <div className="text-xs text-neutral-500 flex items-center gap-2">
+                              <Badge variant="secondary" className="text-[10px] px-2 py-0">
+                                {(pair.support * 100).toFixed(1)}%
+                              </Badge>
+                              <span>{pair.co_occurrence_count} vezes</span>
                             </div>
                           </div>
                         </div>
                         
                         {/* Lado direito: Métricas */}
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          <div className="text-center">
-                            <div className="text-xs text-neutral-500">Lift</div>
-                            <div className="text-sm font-bold text-blue-600">
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                          <div className="text-center px-3 py-2 rounded-lg bg-blue-50 border border-blue-200/50">
+                            <div className="text-[10px] font-medium text-neutral-500 uppercase">Lift</div>
+                            <div className="text-base font-bold text-blue-600">
                               {pair.lift.toFixed(2)}×
                             </div>
                           </div>
-                          <div className="text-center">
-                            <div className="text-xs text-neutral-500">Conf.</div>
-                            <div className="text-sm font-medium text-neutral-700">
+                          <div className="text-center px-3 py-2 rounded-lg bg-neutral-50 border border-neutral-200/50">
+                            <div className="text-[10px] font-medium text-neutral-500 uppercase">Conf.</div>
+                            <div className="text-base font-bold text-neutral-700">
                               {(pair.confidence * 100).toFixed(0)}%
                             </div>
                           </div>
@@ -605,7 +634,7 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
-            </GlassCard>
+            </div>
 
             {/* Distance Analysis Card */}
             {analyticsSnapshot && (
