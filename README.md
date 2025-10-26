@@ -1,73 +1,166 @@
-# Welcome to your Lovable project
+# OptiRack 🛺 🩷
 
-## Project info
+**plataforma de análise inteligente para gestão de SKUs**
+Reorganize SKUs com base em dados reais utilizando recomendações inteligentes: análise ABC, afinidade de produtos e otimização de rotas em um só lugar.
 
-**URL**: https://lovable.dev/projects/c09446f5-1278-4dd8-98f2-f04abb8abc87
+[![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-blueviolet?style=for-the-badge)](https://lovable.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-97.4%25-blue?style=for-the-badge\&logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-Framework-61DAFB?style=for-the-badge\&logo=react)](https://reactjs.org/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-## How can I edit this code?
+**demo**: [https://lovable.dev/projects/c09446f5-1278-4dd8-98f2-f04abb8abc87](https://lovable.dev/projects/c09446f5-1278-4dd8-98f2-f04abb8abc87)
+**documentação rápida**: [como usar](#como-usar) • [arquitetura](#arquitetura) • [roadmap](#roadmap)
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## por que existe?
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c09446f5-1278-4dd8-98f2-f04abb8abc87) and start prompting.
+empresas de trade marketing lidam com bases heterogêneas (cada cliente manda um csv diferente), planilhas manuais, retrabalho e pouca escalabilidade. o **OptiRack** automatiza o mapeamento, padronização de SKUs, checagens de qualidade e geração de gráficos: tudo em uma UI responsiva e amigável.
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## principais recursos
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+* **mapeamento automático com IA**
+  identifica campos tipo `produto`, `sku`, `quantidade`, `data` mesmo com nomes desalinhados, e aprende com cada upload.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+* **qualidade de dados (IQD) e métricas operacionais**
+  cobertura de campos, nulos, outliers, eficiência por segmento/operador, coeficiente de variação e comparações históricas.
 
-Follow these steps:
+* **dashboards interativos**
+  funcionalidades que envolvem período/segmento, fácil visualização.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+* **multi-cliente, multi-projeto**
+  autenticação, histórico de uploads e trilha para auditoria do cliente.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+* **stack moderna**
+  React + TypeScript + Tailwind + shadcn/ui no front; Supabase (auth/db/storage) + Gemini API KEY para IA + Perplexity PRO (mapeamento) no back.
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## estrutura
+
+### pré-requisitos
+
+* Node.js 18+
+* npm ou yarn
+* contas/chaves de **Supabase** e **Google Gemini**
+
+### instalação
+
+```bash
+git clone https://github.com/julianarayer/ai-builder-hackathon-2025-optirack.git
+cd ai-builder-hackathon-2025-optirack
+npm install
 ```
 
-**Edit a file directly in GitHub**
+crie `.env` na raiz:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_GEMINI_API_KEY=your_gemini_api_key
+```
 
-**Use GitHub Codespaces**
+rodar:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+npm run dev
+# abra http://localhost:5173
+```
 
-## What technologies are used for this project?
+scripts úteis:
 
-This project is built with:
+```bash
+npm run build     # build de produção
+npm run preview   # pré-visualização do build
+npm run lint      # checagens estáticas
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
+## como usar
 
-Simply open [Lovable](https://lovable.dev/projects/c09446f5-1278-4dd8-98f2-f04abb8abc87) and click on Share -> Publish.
+1. **upload**
+   faça login → “novo upload” → arraste o csv.
+2. **mapeamento**
+   a IA sugere correspondências de colunas; revise/ajuste se quiser.
+3. **análise**
+   IQD, eficiência, tendências e distribuição temporal.
+4. **visualização**
+   dashboards com filtros e exportação para pdf.
+5. **api**
 
-## Can I connect a custom domain to my Lovable project?
+```js
+const res = await fetch('https://api.optirack.com/analyze', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ file_url: 'https://storage.example.com/data.csv', analysis_type: 'full' })
+});
+const data = await res.json();
+```
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## arquitetura
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```
+┌───────────────────────────┐
+│        react + vite       │  ui (tailwind + shadcn/ui)
+└───────────────┬───────────┘
+                │
+        ┌───────▼────────┐
+        │    supabase    │  auth + db + storage (postgres)
+        └───────┬────────┘
+                │
+        ┌───────▼────────┐
+        │   gemini api   │  mapeamento inteligente de colunas
+        └────────────────┘
+```
+
+**fluxo**: upload → storage → IA identifica e normaliza colunas → cálculo de IQD/KPIs → dashboards → aprendizado contínuo (feedback loop).
+
+---
+
+## tecnologias
+
+* **frontend**: React, TypeScript, Vite, Tailwind CSS, shadcn/ui
+* **backend/serviços**: Supabase (auth/db/storage), PostgreSQL, Google Gemini API
+* **devops/deploy**: GitHub, Lovable
+
+---
+
+## roadmap
+
+**fase 1 — mvp**
+
+* upload csv • mapeamento básico • IQD • dashboard • ui glassmorphism
+
+**fase 2 — em desenvolvimento**
+
+* suporte excel/json/api • predições • alertas de anomalia • mapeamento mais robusto
+
+**fase 3 — futuro**
+
+* integrações com ERPs • app mobile • visão de gôndola (imagens) • recomendações automáticas • marketplace de análises
+
+---
+
+## boas práticas de dados
+
+* anonimizar PII nos uploads (onde aplicável)
+* versionar dicionários de dados e regras de mapeamento
+* registrar exceções de parsing para auditoria
+
+
+---
+
+## produção
+
+**juliana rayer** — ai builder
+
+---
+
+
+
+
