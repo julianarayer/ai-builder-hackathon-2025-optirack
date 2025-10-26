@@ -133,14 +133,6 @@ export default function Landing() {
                 Começar Gratuitamente
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="bg-white/80 backdrop-blur-sm"
-                onClick={() => navigate('/demo')}
-              >
-                Ver Demo Interativo
-              </Button>
             </div>
           </div>
         </div>
