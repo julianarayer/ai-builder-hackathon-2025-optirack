@@ -34,7 +34,7 @@ export const WarehouseHeatmap = ({ activeClass }: WarehouseHeatmapProps) => {
     <div className="space-y-4">
       <div className="p-6 bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-2xl border-2 border-neutral-200">
         <h4 className="text-sm font-medium text-neutral-700 mb-4 flex items-center gap-2">
-          🗺️ Mapa de Calor do Armazém
+          Mapa de Calor do Armazém
           <Badge variant="outline" size="sm">
             Visualização
           </Badge>
@@ -45,7 +45,7 @@ export const WarehouseHeatmap = ({ activeClass }: WarehouseHeatmapProps) => {
           {/* Dock Area */}
           <div className="absolute bottom-0 left-0 right-0 h-12 bg-green-100 border-t-2 border-green-300 flex items-center justify-center">
             <span className="text-sm font-medium text-green-700">
-              📦 Área de Expedição/Dock
+              Área de Expedição/Dock
             </span>
           </div>
 

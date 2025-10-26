@@ -22,7 +22,7 @@ export const ImpactSection = ({ latestRun }: ImpactSectionProps) => {
         </div>
         <div>
           <h2 className="text-2xl font-medium text-neutral-900">
-            🎯 Impacto Potencial
+            Impacto Potencial
           </h2>
           <p className="text-sm text-subtle">
             Economia estimada ao implementar as recomendações
@@ -101,7 +101,7 @@ export const ImpactSection = ({ latestRun }: ImpactSectionProps) => {
       {/* ROI Timeline */}
       <div className="mt-6 p-4 rounded-xl bg-white/40 backdrop-blur-sm border border-neutral-200">
         <h4 className="text-sm font-medium text-neutral-700 mb-3">
-          📅 Timeline de Implementação Sugerida
+          Timeline de Implementação Sugerida
         </h4>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>

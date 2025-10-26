@@ -139,7 +139,7 @@ export default function Landing() {
                 className="bg-white/80 backdrop-blur-sm"
                 onClick={() => navigate('/demo')}
               >
-                🚀 Ver Demo Interativo
+                Ver Demo Interativo
               </Button>
             </div>
           </div>

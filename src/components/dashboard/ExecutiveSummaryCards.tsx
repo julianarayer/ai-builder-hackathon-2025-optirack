@@ -28,7 +28,7 @@ export const ExecutiveSummaryCards = ({
         </div>
         <div>
           <h2 className="text-2xl font-medium text-neutral-900">
-            📊 Resumo Executivo
+            Resumo Executivo
           </h2>
           <p className="text-sm text-subtle">
             Visão geral das oportunidades de otimização identificadas
@@ -84,7 +84,7 @@ export const ExecutiveSummaryCards = ({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-primary-100/60 to-primary-200/60 border border-primary-300">
         <div className="flex-1">
           <h3 className="text-base font-semibold text-neutral-900 mb-1">
-            🎯 Pronto para Implementar?
+            Pronto para Implementar?
           </h3>
           <p className="text-sm text-neutral-700">
             Implemente as {recommendationsCount} recomendações prioritárias e economize{" "}
@@ -106,13 +106,13 @@ export const ExecutiveSummaryCards = ({
       {/* Timeline */}
       <div className="mt-4 flex items-center justify-center gap-6 text-xs text-neutral-600">
         <Badge variant="outline" className="bg-white/50">
-          🗓️ Semana 1-2: Implementar prioritários
+          Semana 1-2: Implementar prioritários
         </Badge>
         <Badge variant="outline" className="bg-white/50">
-          📅 Semana 3-4: Ajustes secundários
+          Semana 3-4: Ajustes secundários
         </Badge>
         <Badge variant="outline" className="bg-white/50">
-          🔄 Mês 2+: Monitoramento contínuo
+          Mês 2+: Monitoramento contínuo
         </Badge>
       </div>
     </GlassCard>
