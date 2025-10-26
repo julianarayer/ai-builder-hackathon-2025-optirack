@@ -33,6 +33,7 @@ import {
   User as UserIcon,
   History,
   Info as InfoIcon,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import optirackLogo from "@/assets/optirack-logo.png";
@@ -44,6 +45,7 @@ import {
   getTopSKUs, 
   type AnalysisProgress 
 } from "@/services/warehouseAnalysis";
+import { exportDashboardToPDF } from "@/services/pdfExportService";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -115,6 +117,29 @@ export default function Dashboard() {
       navigate('/login');
     } catch (error) {
       toast.error('Erro ao fazer logout');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!latestRun) {
+      toast.error('Nenhuma análise disponível para exportar');
+      return;
+    }
+
+    toast.loading('Gerando PDF...', { id: 'pdf-export' });
+    
+    try {
+      await exportDashboardToPDF('dashboard-content', {
+        user: {
+          email: user?.email,
+          full_name: user?.user_metadata?.full_name
+        },
+        latestRun
+      });
+      
+      toast.success('PDF exportado com sucesso!', { id: 'pdf-export' });
+    } catch (error) {
+      toast.error('Erro ao exportar PDF', { id: 'pdf-export' });
     }
   };
 
@@ -281,8 +306,21 @@ export default function Dashboard() {
 
             {/* Right side actions */}
             <div className="flex items-center gap-3">
+              {/* Botão de Exportação PDF */}
+              {latestRun && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportPDF}
+                  title="Exportar Relatório para PDF"
+                  className="hover:bg-primary-50 border-primary-200 text-primary-700 font-medium gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="hidden md:inline">Exportar PDF</span>
+                </Button>
+              )}
               
-              <div 
+              <div
                 className="flex items-center gap-2 px-3 py-2 rounded-full bg-neutral-100/80 hover:bg-neutral-100 transition-colors cursor-pointer"
                 onClick={() => navigate('/perfil')}
               >
