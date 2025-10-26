@@ -14,6 +14,7 @@ import ABCDistribution from "./pages/ABCDistribution";
 import Inventory from "./pages/Inventory";
 import Profile from "./pages/Profile";
 import Affinity from "./pages/Affinity";
+import Demo from "./pages/Demo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/afinidade" element={<Affinity />} />
           <Route path="/estoque" element={<Inventory />} />
           <Route path="/perfil" element={<Profile />} />
+          <Route path="/demo" element={<Demo />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

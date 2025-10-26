@@ -14,6 +14,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ArrowLeft, Package, Grid3x3, Layers } from "lucide-react";
 import { toast } from "sonner";
+import { SKUSearchBar } from "@/components/skus/SKUSearchBar";
+import { SKUFilters, type SKUFiltersState } from "@/components/skus/SKUFilters";
 interface CategorySummary {
   category: string;
   count: number;
@@ -42,6 +44,14 @@ export default function SKUsAnalysis() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryDetails, setCategoryDetails] = useState<SKUDetail[]>([]);
   const [totalSKUs, setTotalSKUs] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<SKUFiltersState>({
+    categories: [],
+    velocityClasses: [],
+    velocities: [],
+    hasRecommendation: null,
+  });
+  const [allCategories, setAllCategories] = useState<string[]>([]);
   useEffect(() => {
     loadCategoriesData();
   }, [analysisId]);
@@ -113,6 +123,7 @@ export default function SKUsAnalysis() {
       // Sort by count descending
       summaries.sort((a, b) => b.count - a.count);
       setCategories(summaries);
+      setAllCategories(Array.from(categoryMap.keys()));
       setIsLoading(false);
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -155,6 +166,21 @@ export default function SKUsAnalysis() {
         return 'bg-neutral-100 text-neutral-600 border-neutral-300';
     }
   };
+  // Apply filters
+  const filteredCategories = categories.filter((cat) => {
+    // Search filter
+    if (searchQuery && !cat.category.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+
+    // Category filter
+    if (filters.categories.length > 0 && !filters.categories.includes(cat.category)) {
+      return false;
+    }
+
+    return true;
+  });
+
   if (isLoading) {
     return <div className="min-h-screen bg-gradient-to-b from-neutral-50 via-primary-50/30 to-neutral-50 flex items-center justify-center">
         <div className="shimmer h-12 w-48 rounded-2xl" />
@@ -182,9 +208,15 @@ export default function SKUsAnalysis() {
           </div>
         </div>
 
+        {/* Search and Filters */}
+        <div className="space-y-4">
+          <SKUSearchBar value={searchQuery} onChange={setSearchQuery} />
+          <SKUFilters filters={filters} onFiltersChange={setFilters} availableCategories={allCategories} />
+        </div>
+
         {/* Summary Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map(cat => <GlassCard key={cat.category} hover onClick={() => handleCategoryClick(cat.category)} className="p-6 cursor-pointer transition-all hover:scale-105">
+          {filteredCategories.map(cat => <GlassCard key={cat.category} hover onClick={() => handleCategoryClick(cat.category)} className="p-6 cursor-pointer transition-all hover:scale-105">
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

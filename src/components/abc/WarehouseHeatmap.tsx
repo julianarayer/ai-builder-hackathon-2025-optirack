@@ -1,10 +1,16 @@
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 interface WarehouseHeatmapProps {
   activeClass: "A" | "B" | "C" | "D";
 }
 
 export const WarehouseHeatmap = ({ activeClass }: WarehouseHeatmapProps) => {
+  const navigate = useNavigate();
+  const [hoveredZone, setHoveredZone] = useState<string | null>(null);
+
   const classColors = {
     A: { bg: "bg-pink-500", light: "bg-pink-100", border: "border-pink-300" },
     B: { bg: "bg-blue-500", light: "bg-blue-100", border: "border-blue-300" },
@@ -13,12 +19,16 @@ export const WarehouseHeatmap = ({ activeClass }: WarehouseHeatmapProps) => {
   };
 
   const zones = [
-    { name: "A", distance: "0-30m", items: "Fast movers", class: "A", x: 20, y: 20 },
-    { name: "B", distance: "30-60m", items: "Medium", class: "B", x: 50, y: 20 },
-    { name: "C", distance: "60-90m", items: "Slow movers", class: "C", x: 80, y: 20 },
-    { name: "D", distance: ">90m", items: "Very slow", class: "D", x: 20, y: 60 },
-    { name: "E", distance: "Backup", items: "Reserve", class: "C", x: 80, y: 60 },
+    { name: "A", distance: "0-30m", items: "Fast movers", class: "A", x: 20, y: 20, skuCount: 42, picksPerMonth: 8450 },
+    { name: "B", distance: "30-60m", items: "Medium", class: "B", x: 50, y: 20, skuCount: 58, picksPerMonth: 4200 },
+    { name: "C", distance: "60-90m", items: "Slow movers", class: "C", x: 80, y: 20, skuCount: 35, picksPerMonth: 1850 },
+    { name: "D", distance: ">90m", items: "Very slow", class: "D", x: 20, y: 60, skuCount: 22, picksPerMonth: 420 },
+    { name: "E", distance: "Backup", items: "Reserve", class: "C", x: 80, y: 60, skuCount: 18, picksPerMonth: 380 },
   ];
+
+  const handleZoneClick = (zone: any) => {
+    navigate(`/distribuicao-abc?zona=${zone.name}&classe=${zone.class}`);
+  };
 
   return (
     <div className="space-y-4">
@@ -39,52 +49,78 @@ export const WarehouseHeatmap = ({ activeClass }: WarehouseHeatmapProps) => {
             </span>
           </div>
 
-          {/* Zones */}
-          {zones.map((zone) => {
-            const colors = classColors[zone.class as keyof typeof classColors];
-            const isActive = zone.class === activeClass;
+          {/* Zones - NOW CLICKABLE WITH TOOLTIPS */}
+          <TooltipProvider>
+            {zones.map((zone) => {
+              const colors = classColors[zone.class as keyof typeof classColors];
+              const isActive = zone.class === activeClass;
+              const isHovered = hoveredZone === zone.name;
 
-            return (
-              <div
-                key={zone.name}
-                className={`absolute rounded-lg border-2 transition-all ${
-                  isActive
-                    ? `${colors.bg} ${colors.border} opacity-90 scale-105 shadow-lg`
-                    : `${colors.light} ${colors.border} opacity-60`
-                }`}
-                style={{
-                  left: `${zone.x}%`,
-                  top: `${zone.y}%`,
-                  width: "25%",
-                  height: "30%",
-                }}
-              >
-                <div className="p-3 h-full flex flex-col items-center justify-center text-center">
-                  <div
-                    className={`text-2xl font-bold mb-1 ${
-                      isActive ? "text-white" : "text-neutral-700"
-                    }`}
-                  >
-                    Zona {zone.name}
-                  </div>
-                  <div
-                    className={`text-xs ${
-                      isActive ? "text-white/90" : "text-neutral-600"
-                    }`}
-                  >
-                    {zone.distance}
-                  </div>
-                  <div
-                    className={`text-xs font-medium mt-1 ${
-                      isActive ? "text-white" : "text-neutral-700"
-                    }`}
-                  >
-                    {zone.items}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+              return (
+                <Tooltip key={zone.name}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={`absolute rounded-lg border-2 transition-all cursor-pointer ${
+                        isActive
+                          ? `${colors.bg} ${colors.border} opacity-90 scale-105 shadow-lg`
+                          : `${colors.light} ${colors.border} opacity-60 hover:opacity-80 hover:scale-102`
+                      }`}
+                      style={{
+                        left: `${zone.x}%`,
+                        top: `${zone.y}%`,
+                        width: "25%",
+                        height: "30%",
+                      }}
+                      onClick={() => handleZoneClick(zone)}
+                      onMouseEnter={() => setHoveredZone(zone.name)}
+                      onMouseLeave={() => setHoveredZone(null)}
+                    >
+                      <div className="p-3 h-full flex flex-col items-center justify-center text-center relative">
+                        {/* SKU Count Badge */}
+                        <Badge 
+                          className={`absolute top-1 right-1 text-xs ${
+                            isActive ? "bg-white/20 text-white border-white/40" : "bg-neutral-100 text-neutral-700 border-neutral-300"
+                          }`}
+                        >
+                          {zone.skuCount} SKUs
+                        </Badge>
+                        
+                        <div
+                          className={`text-2xl font-bold mb-1 ${
+                            isActive ? "text-white" : "text-neutral-700"
+                          }`}
+                        >
+                          Zona {zone.name}
+                        </div>
+                        <div
+                          className={`text-xs ${
+                            isActive ? "text-white/90" : "text-neutral-600"
+                          }`}
+                        >
+                          {zone.distance}
+                        </div>
+                        <div
+                          className={`text-xs font-medium mt-1 ${
+                            isActive ? "text-white" : "text-neutral-700"
+                          }`}
+                        >
+                          {zone.items}
+                        </div>
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-white p-3 shadow-lg">
+                    <div className="space-y-1">
+                      <p className="font-semibold text-neutral-900">Zona {zone.name}</p>
+                      <p className="text-xs text-neutral-600">{zone.skuCount} SKUs</p>
+                      <p className="text-xs text-neutral-600">{zone.picksPerMonth.toLocaleString()} picks/mês</p>
+                      <p className="text-xs text-primary-600 font-medium">Click para ver detalhes</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </TooltipProvider>
 
           {/* Arrows showing movement */}
           {activeClass === "C" && (

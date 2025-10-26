@@ -19,6 +19,7 @@ import { DistanceAnalysisCard } from "@/components/analytics/DistanceAnalysisCar
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ImpactSection } from "@/components/dashboard/ImpactSection";
+import { ExecutiveSummaryCards } from "@/components/dashboard/ExecutiveSummaryCards";
 import {
   Package,
   Clock,
@@ -315,6 +316,16 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Executive Summary - MOVED TO TOP */}
+        {latestRun && (
+          <ExecutiveSummaryCards
+            latestRun={latestRun}
+            criticalSKUsCount={latestRun.high_priority_count || 0}
+            inventoryValue={latestRun.total_skus_analyzed * 1500 || 0}
+            implementationRate={0}
+          />
+        )}
+
         {/* KPI Metrics */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div onClick={() => latestRun && navigate('/skus')} className={latestRun ? 'cursor-pointer' : ''}>
@@ -388,7 +399,7 @@ export default function Dashboard() {
           </GlassCard>
         )}
 
-        {/* Impact Section */}
+        {/* Impact Section - NOW BELOW EXECUTIVE SUMMARY */}
         {latestRun && <ImpactSection latestRun={latestRun} />}
 
         {/* Quick Stats */}
