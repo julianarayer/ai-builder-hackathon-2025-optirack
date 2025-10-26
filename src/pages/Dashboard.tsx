@@ -230,10 +230,23 @@ export default function Dashboard() {
       
       if (snapshot) {
         setAnalyticsSnapshot(snapshot);
-        if (snapshot.top_affinity_pairs && Array.isArray(snapshot.top_affinity_pairs)) {
-          setAffinityPairs(snapshot.top_affinity_pairs as any[]);
-        }
       }
+    }
+
+    // Load affinity pairs from product_affinity table
+    const { data: pairs } = await supabase
+      .from('product_affinity')
+      .select(`
+        *,
+        sku_a:skus!product_affinity_sku_a_id_fkey(sku_code, sku_name),
+        sku_b:skus!product_affinity_sku_b_id_fkey(sku_code, sku_name)
+      `)
+      .eq('warehouse_id', warehouse.id)
+      .order('lift', { ascending: false })
+      .limit(10);
+
+    if (pairs) {
+      setAffinityPairs(pairs as any[]);
     }
   };
 
@@ -541,10 +554,11 @@ export default function Dashboard() {
               <div className="flex items-center justify-center h-64 overflow-y-auto">
                 {affinityPairs.length > 0 ? (
                   <div className="space-y-2 w-full pr-2">
-                    {affinityPairs.slice(0, 10).map((pair, index) => (
+                    {affinityPairs.map((pair: any, index) => (
                       <div 
-                        key={index} 
-                        className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50/30 to-transparent rounded-lg hover:from-primary-100/40 transition-colors border border-primary-100/30"
+                        key={pair.id || index} 
+                        className="flex items-center justify-between p-3 bg-gradient-to-r from-primary-50/30 to-transparent rounded-lg hover:from-primary-100/40 transition-colors border border-primary-100/30 cursor-pointer"
+                        onClick={() => navigate('/afinidade')}
                       >
                         {/* Lado esquerdo: SKUs e posição */}
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -553,10 +567,10 @@ export default function Dashboard() {
                           </span>
                           <div className="flex flex-col min-w-0">
                             <div className="font-medium text-sm text-neutral-900 truncate">
-                              {pair.sku_i} + {pair.sku_j}
+                              {pair.sku_a?.sku_code || 'N/A'} + {pair.sku_b?.sku_code || 'N/A'}
                             </div>
                             <div className="text-xs text-neutral-500">
-                              {(pair.support_ij * 100).toFixed(1)}% dos pedidos
+                              {(pair.support * 100).toFixed(1)}% dos pedidos • {pair.co_occurrence_count} vezes
                             </div>
                           </div>
                         </div>
@@ -570,15 +584,9 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <div className="text-center">
-                            <div className="text-xs text-neutral-500">φ</div>
-                            <div className="text-sm font-bold text-pink-600">
-                              {pair.phi.toFixed(2)}
-                            </div>
-                          </div>
-                          <div className="text-center">
                             <div className="text-xs text-neutral-500">Conf.</div>
                             <div className="text-sm font-medium text-neutral-700">
-                              {(pair.confidence_i_to_j * 100).toFixed(0)}%
+                              {(pair.confidence * 100).toFixed(0)}%
                             </div>
                           </div>
                         </div>
