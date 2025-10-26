@@ -45,7 +45,6 @@ import {
   getTopSKUs, 
   type AnalysisProgress 
 } from "@/services/warehouseAnalysis";
-import { exportDashboardToPDF } from "@/services/pdfExportService";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -120,27 +119,14 @@ export default function Dashboard() {
     }
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = () => {
     if (!latestRun) {
       toast.error('Nenhuma análise disponível para exportar');
       return;
     }
 
-    toast.loading('Gerando PDF...', { id: 'pdf-export' });
-    
-    try {
-      await exportDashboardToPDF('dashboard-content', {
-        user: {
-          email: user?.email,
-          full_name: user?.user_metadata?.full_name
-        },
-        latestRun
-      });
-      
-      toast.success('PDF exportado com sucesso!', { id: 'pdf-export' });
-    } catch (error) {
-      toast.error('Erro ao exportar PDF', { id: 'pdf-export' });
-    }
+    toast.info('Abra o diálogo de impressão e escolha "Salvar como PDF"');
+    window.print();
   };
 
   const handleFileSelect = (data: any[], filename: string, mappingData?: any) => {
@@ -355,7 +341,7 @@ export default function Dashboard() {
       <div className="h-[56px]" />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main id="dashboard-content" className="container mx-auto px-4 py-8 space-y-8">
         {/* Welcome Section */}
         <div className="space-y-3">
           <h2 className="text-4xl font-bold text-neutral-900">
